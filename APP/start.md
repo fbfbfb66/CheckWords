@@ -1,0 +1,2 @@
+$env:HTTP_PROXY = "http://127.0.0.1:10808"; $env:HTTPS_PROXY = "http://127.0.0.1:10808"; $env:PUB_HOSTED_URL = "https://pub.flutter-io.cn";
+  $env:FLUTTER_STORAGE_BASE_URL = "https://storage.flutter-io.cn"; & "C:\Program Files\Android\Android Studio\bin\studio64.exe"

@@ -1,0 +1,38 @@
+# Build configuration for code generation
+targets:
+  $default:
+    builders:
+      # Riverpod code generation
+      riverpod_generator|riverpod_generator:
+        enabled: true
+      
+      # JSON serialization
+      json_serializable|json_serializable:
+        enabled: true
+      
+      # Freezed code generation
+      freezed|freezed:
+        enabled: true
+      
+      # Drift database code generation
+      drift_dev|not_shared:
+        enabled: true
+        generate_for:
+          - lib/core/database/**
+
+global_options:
+  # Riverpod generator options
+  riverpod_generator|riverpod_generator:
+    options:
+      line_length: 100
+  
+  # JSON annotation options
+  json_serializable|json_serializable:
+    options:
+      create_factory: true
+      create_to_json: true
+  
+  # Freezed options
+  freezed|freezed:
+    options:
+      line_length: 100

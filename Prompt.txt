@@ -1,0 +1,87 @@
+只输出 JSON 数组，不要任何解释或代码块标记。
+数组长度必须与我提供的单词数一致。
+
+你是一个词汇数据标注器。根据下面的数据规范为我提供的英语单词生成 JSON。
+
+数据规范（Schema 约束）
+
+每个数组元素是一个对象，必须包含这些字段：
+
+"word": 原样输出我的单词（大小写、撇号等完全一致）。
+
+"parts_of_speech": 词性数组，取值从
+{noun, verb, adj, adv, pron, prep, conj, det, article, aux, modal, interj, num, proper_noun, abbr, phrasal_verb} 中选择（可多个）。
+
+"pos_meanings": 与 parts_of_speech 一一对应的数组：
+[{ "pos": "<上面集合中的一个>", "cn": "该词性下的简短中文释义（≤30字）" }]
+▶️ 每个列出的词性都要有单独的中文释义。
+
+"phrases": 短语与对话（见规则），是数组。
+
+实词（名/动/形/副等）：至少 1 个短语对象；
+
+功能词（冠词/代词/介词/连词/助动/情态/感叹/数词等）：可以是空数组 []。
+短语对象结构：
+{"phrase": "<自然搭配的短语>", "dialog": {"A": "<口语句，≤12词>", "B": "<口语回复，≤12词>"}}
+规则：
+
+phrase 必须是自然搭配，不得等于单词本体；
+
+A 或 B 中必须逐字出现该 phrase；
+
+语言自然、简洁，避免书面腔或生造搭配。
+
+"sentences": 置为 []（由脚本稍后自动补充例句）。
+
+"pronunciation": 固定形如
+{"US": {"ipa": null, "audio": null}}（由脚本稍后自动补齐 IPA/音频）。
+
+生成要求
+
+只输出 JSON 数组，不加反引号或说明。
+
+数组顺序与输入顺序一致，元素数量相同。
+
+每个 pos_meanings.cn ≤30 字，口语自然，不要冗长解释。
+
+如果某个词既是实词也是功能词，只要含有实词身份，就按实词规则提供至少 1 个自然短语。
+
+严禁：用单词本体充当短语；对话里只出现单词本体而不出现短语。
+
+输入单词
+<<  "dawn",
+  "dispute",
+  "earnings"
+>>
+
+输出示例（示意两种类型）
+[
+  {
+    "word": "go",
+    "parts_of_speech": ["verb"],
+    "pos_meanings": [
+      { "pos": "verb", "cn": "去；移动；进行" }
+    ],
+    "phrases": [
+      {
+        "phrase": "go for a walk",
+        "dialog": {
+          "A": "Let's go for a walk after dinner.",
+          "B": "Sounds great, I need some fresh air."
+        }
+      }
+    ],
+    "sentences": [],
+    "pronunciation": { "US": { "ipa": null, "audio": null } }
+  },
+  {
+    "word": "an",
+    "parts_of_speech": ["det"],
+    "pos_meanings": [
+      { "pos": "det", "cn": "用于元音音素开头名词前的限定词" }
+    ],
+    "phrases": [],
+    "sentences": [],
+    "pronunciation": { "US": { "ipa": null, "audio": null } }
+  }
+]
