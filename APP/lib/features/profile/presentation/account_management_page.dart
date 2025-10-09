@@ -8,6 +8,7 @@ import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_button.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 账号管理页面
 class AccountManagementPage extends ConsumerStatefulWidget {
@@ -61,14 +62,14 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
     
     if (currentUser == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('账号管理')),
-        body: const Center(child: Text('用户未登录')),
+        appBar: AppBar(title: Text(S.current.accountManagement)),
+        body: Center(child: Text(S.current.userNotLoggedInText)),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('账号管理'),
+        title: Text(S.current.accountManagement),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -108,7 +109,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
         child: Column(
           children: [
             Text(
-              '头像',
+              S.current.avatarLabel,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -154,7 +155,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
             const SizedBox(height: DesignTokens.spacingMedium),
             
             Text(
-              '点击更换头像',
+              S.current.tapToChangeAvatar,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -200,7 +201,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '基本信息',
+              S.current.basicInfo,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -210,7 +211,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
             
             // 邮箱（只读）
             CustomTextField(
-              labelText: '邮箱',
+              labelText: S.current.email,
               controller: TextEditingController(text: user.email),
               enabled: false,
               prefixIcon: Icons.email_outlined,
@@ -226,7 +227,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
                 children: [
                   CustomTextField(
                     controller: _nameController,
-                    labelText: '姓名',
+                    labelText: S.current.name,
                     prefixIcon: Icons.person_outlined,
                     validator: _validateName,
                   ),
@@ -240,7 +241,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
-                    child: const Text('保存姓名'),
+                    child: Text(S.current.saveName),
                   ),
                 ],
               ),
@@ -262,7 +263,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '修改密码',
+                S.current.changePassword,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -273,7 +274,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
               // 当前密码
               CustomTextField(
                 controller: _currentPasswordController,
-                labelText: '当前密码',
+                labelText: S.current.currentPassword,
                 prefixIcon: Icons.lock_outlined,
                 obscureText: _obscureCurrentPassword,
                 validator: _validateCurrentPassword,
@@ -290,7 +291,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
               // 新密码
               CustomTextField(
                 controller: _newPasswordController,
-                labelText: '新密码',
+                labelText: S.current.newPassword,
                 prefixIcon: Icons.lock_reset_outlined,
                 obscureText: _obscureNewPassword,
                 validator: _validateNewPassword,
@@ -307,7 +308,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
               // 确认新密码
               CustomTextField(
                 controller: _confirmPasswordController,
-                labelText: '确认新密码',
+                labelText: S.current.confirmNewPassword,
                 prefixIcon: Icons.lock_outlined,
                 obscureText: _obscureConfirmPassword,
                 validator: _validateConfirmPassword,
@@ -326,7 +327,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
                 child: LoadingButton(
                   onPressed: _changePassword,
                   isLoading: _isChangingPassword,
-                  child: const Text('保存密码'),
+                  child: Text(S.current.savePassword),
                 ),
               ),
             ],
@@ -346,7 +347,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
           foregroundColor: Colors.red,
           side: const BorderSide(color: Colors.red),
         ),
-        child: const Text('退出登录'),
+        child: Text(S.current.logout),
       ),
     );
   }
@@ -358,18 +359,18 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
     final ImageSource? source = await showDialog<ImageSource>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择头像'),
+        title: Text(S.current.selectAvatar),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('从相册选择'),
+              title: Text(S.current.selectFromGallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('拍照'),
+              title: Text(S.current.takePhoto),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
           ],
@@ -396,14 +397,14 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('头像更新成功')),
+          SnackBar(content: Text(S.current.avatarUpdateSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('头像更新失败：$e'),
+            content: Text('${S.current.avatarUpdateFailed}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -423,14 +424,14 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('姓名更新成功')),
+          SnackBar(content: Text(S.current.nameUpdateSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('姓名更新失败：$e'),
+            content: Text('${S.current.nameUpdateFailed}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -462,14 +463,14 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('密码修改成功')),
+          SnackBar(content: Text(S.current.passwordChangeSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('密码修改失败：$e'),
+            content: Text('${S.current.passwordChangeFailed}: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -484,17 +485,17 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
     showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定要退出当前账户吗？'),
+        title: Text(S.current.logout),
+        content: Text(S.current.logoutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),
@@ -509,7 +510,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
   /// 验证姓名
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return '请输入姓名';
+      return S.current.pleaseEnterName;
     }
     if (value.trim().length < 2) {
       return '姓名长度不能少于2位';
@@ -523,7 +524,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
   /// 验证当前密码
   String? _validateCurrentPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入当前密码';
+      return S.current.pleaseEnterCurrentPassword;
     }
     return null;
   }
@@ -531,7 +532,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
   /// 验证新密码
   String? _validateNewPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入新密码';
+      return S.current.pleaseEnterNewPassword;
     }
     if (value.length < 6) {
       return '密码长度不能少于6位';
@@ -554,7 +555,7 @@ class _AccountManagementPageState extends ConsumerState<AccountManagementPage> {
   /// 验证确认密码
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请确认新密码';
+      return S.current.pleaseConfirmNewPassword;
     }
     if (value != _newPasswordController.text) {
       return '两次输入的密码不一致';

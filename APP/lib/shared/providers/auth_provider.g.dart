@@ -8,7 +8,7 @@ part of 'auth_provider.dart';
 
 String _$currentUserHash() => r'26f26ff753f1b524cb07df5bbadfd37fbbfb2e47';
 
-/// 当前用户Provider
+/// 当前用户
 ///
 /// Copied from [currentUser].
 @ProviderFor(currentUser)
@@ -24,7 +24,7 @@ final currentUserProvider = AutoDisposeProvider<UserModel?>.internal(
 typedef CurrentUserRef = AutoDisposeProviderRef<UserModel?>;
 String _$isAuthenticatedHash() => r'ff8bc75b4a69913b1807bf9bfc7ca8c47c11efd0';
 
-/// 是否已认证Provider
+/// 是否已认证
 ///
 /// Copied from [isAuthenticated].
 @ProviderFor(isAuthenticated)
@@ -39,7 +39,7 @@ final isAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
 );
 
 typedef IsAuthenticatedRef = AutoDisposeProviderRef<bool>;
-String _$authNotifierHash() => r'e6170e79731217d0949076dc8af76a6e6d77dd2e';
+String _$authNotifierHash() => r'fcc57b91ed8abbcdbf426362dc09c5fbb13dd9ae';
 
 /// 认证服务
 ///

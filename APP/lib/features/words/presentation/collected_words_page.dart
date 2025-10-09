@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/favorites_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
+import '../../../shared/models/word_model.dart';
+import '../../../core/database/tables/user_words_table.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 收录单词页面
 class CollectedWordsPage extends ConsumerStatefulWidget {
@@ -22,24 +29,40 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
   // 当前选中的标签索引
   int _currentTabIndex = 0;
 
-  // 模拟数据（实际应从数据库获取）
-  final List<Map<String, dynamic>> _favoriteWords = [];
-  final List<Map<String, dynamic>> _masteredWords = [];
-  final List<Map<String, dynamic>> _learningWords = [];
+  // 搜索关键词
+  String _searchQuery = '';
+
+  // 搜索防抖定时器
+  Timer? _searchDebouncer;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
-    _loadCollectedWords();
+    // 移除_loadCollectedWords调用，改为实时获取数据
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _searchDebouncer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 页面重新获得焦点时触发刷新
+    if (mounted) {
+      // 延迟一下刷新，确保其他页面的操作已经完成
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
   }
 
   /// 标签页变化监听
@@ -51,20 +74,55 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
     }
   }
 
-  /// 加载收录的单词
-  void _loadCollectedWords() {
-    // TODO: 从数据库加载用户收录的单词
-    // 目前为空，等实现数据库查询功能
+  /// 根据学习状态获取单词
+  Future<List<WordModel>> _getWordsByStatus(LearningStatus status) async {
+    // 这里暂时只实现了收藏功能，其他学习状态为空
+    if (status == LearningStatus.notLearned) {
+      // 获取收藏的单词（isFavorited = true）
+      final favoriteWordsAsync = ref.read(favoriteWordsProvider(limit: 1000));
+      return favoriteWordsAsync.when(
+        data: (words) => words,
+        loading: () => [],
+        error: (_, __) => [],
+      );
+    }
+    return []; // 已掌握和学习中的单词暂时为空
+  }
+
+  /// 搜索收录的单词
+  Future<List<WordModel>> _searchWords(LearningStatus status) async {
+    if (_searchQuery.isEmpty) return [];
+
+    // 只在收录分类中搜索收藏的单词
+    if (status == LearningStatus.notLearned) {
+      final favoriteWordsAsync = ref.read(favoriteWordsProvider(limit: 1000));
+      return favoriteWordsAsync.when(
+        data: (words) => words
+            .where((word) =>
+                word.word.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                word.primaryMeaning
+                    .toLowerCase()
+                    .contains(_searchQuery.toLowerCase()))
+            .toList(),
+        loading: () => [],
+        error: (_, __) => [],
+      );
+    }
+    // 已掌握和学习中分类暂时为空，不返回任何单词
+    return [];
   }
 
   @override
   Widget build(BuildContext context) {
     final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
     if (!isAuthenticated) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('收录单词'),
+          title: Text(S.current.favoriteWords),
           centerTitle: true,
         ),
         body: _buildNotLoggedInView(context),
@@ -73,7 +131,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('收录单词'),
+        title: Text(S.current.favoriteWords),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -82,13 +140,37 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
           tabs: [
             Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.favorite, size: 16),
-                  const SizedBox(width: 4),
-                  Text('收录 (${_favoriteWords.length})'),
-                ],
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final favoriteCountAsync =
+                      ref.watch(favoriteWordsCountProvider);
+                  return favoriteCountAsync.when(
+                    data: (count) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.favorite, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${S.current.collected} ($count)'),
+                      ],
+                    ),
+                    loading: () => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.favorite, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${S.current.collected} (...'),
+                      ],
+                    ),
+                    error: (_, __) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.favorite, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${S.current.collected} (0)'),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
             Tab(
@@ -97,7 +179,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
                 children: [
                   const Icon(Icons.check_circle, size: 16),
                   const SizedBox(width: 4),
-                  Text('已掌握 (${_masteredWords.length})'),
+                  Text(S.current.masteredWithCount ?? '已掌握 (0)'),
                 ],
               ),
             ),
@@ -107,7 +189,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
                 children: [
                   const Icon(Icons.school, size: 16),
                   const SizedBox(width: 4),
-                  Text('学习中 (${_learningWords.length})'),
+                  Text(S.current.learningWithCount ?? '学习中 (0)'),
                 ],
               ),
             ),
@@ -119,15 +201,15 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
           children: [
             // 搜索栏
             _buildSearchBar(),
-            
+
             // 内容区域
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildWordList(_favoriteWords, '收录'),
-                  _buildWordList(_masteredWords, '已掌握'),
-                  _buildWordList(_learningWords, '学习中'),
+                  _buildWordsList(LearningStatus.notLearned, S.current.collected),
+                  _buildWordsList(LearningStatus.mastered, S.current.mastered),
+                  _buildWordsList(LearningStatus.learning, S.current.learning),
                 ],
               ),
             ),
@@ -153,7 +235,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: '搜索收录的单词...',
+          hintText: S.current.searchCollectedWords,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -172,15 +254,70 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
           fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
         onChanged: (value) {
-          setState(() {});
-          // TODO: 实现搜索功能
+          // 取消之前的防抖定时器
+          _searchDebouncer?.cancel();
+
+          // 设置新的防抖定时器（300ms防抖）
+          _searchDebouncer = Timer(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              setState(() {
+                _searchQuery = value.trim();
+              });
+            }
+          });
         },
       ),
     );
   }
 
   /// 构建单词列表
-  Widget _buildWordList(List<Map<String, dynamic>> words, String category) {
+  Widget _buildWordsList(LearningStatus status, String category) {
+    // 已掌握和学习中分类暂时显示空状态
+    if (status == LearningStatus.mastered ||
+        status == LearningStatus.learning) {
+      return _buildEmptyView(category);
+    }
+
+    return Consumer(
+      builder: (context, ref, child) {
+        if (_searchQuery.isEmpty) {
+          // 显示所有收藏单词 - 使用Consumer自动监听数据变化
+          final favoriteWordsAsync =
+              ref.watch(favoriteWordsProvider(limit: 1000));
+
+          return favoriteWordsAsync.when(
+            data: (words) => _buildWordsListView(words, category),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => _buildErrorView(category, S.current.loadFailed),
+          );
+        } else {
+          // 显示搜索结果 - 只在收录分类中搜索
+          final favoriteWordsAsync =
+              ref.watch(favoriteWordsProvider(limit: 1000));
+
+          return favoriteWordsAsync.when(
+            data: (words) {
+              final searchWords = words
+                  .where((word) =>
+                      word.word
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()) ||
+                      word.primaryMeaning
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()))
+                  .toList();
+              return _buildWordsListView(searchWords, category);
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => _buildErrorView(category, S.current.searchFailed),
+          );
+        }
+      },
+    );
+  }
+
+  /// 构建单词列表视图
+  Widget _buildWordsListView(List<WordModel> words, String category) {
     if (words.isEmpty) {
       return _buildEmptyView(category);
     }
@@ -206,28 +343,114 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
               color: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: DesignTokens.spacingLarge),
-            
             Text(
               _getEmptyStateTitle(category),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: DesignTokens.spacingMedium),
-            
             Text(
               _getEmptyStateSubtitle(category),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
               textAlign: TextAlign.center,
             ),
-            
             const SizedBox(height: DesignTokens.spacingXLarge),
-            
             ElevatedButton(
-              onPressed: () => context.go(RoutePaths.home),
-              child: const Text('去搜索单词'),
+              onPressed: () {
+                if (category == S.current.learning) {
+                  // 学习中分类跳转到学习页面
+                  context.push(RoutePaths.learning);
+                } else {
+                  context.go(RoutePaths.home);
+                }
+              },
+              child: Text(category == S.current.learning ? S.current.goToLearning : S.current.goToSearchWords),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建搜索为空视图
+  Widget _buildEmptySearchView(String category, String query) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DesignTokens.spacingXLarge),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 80,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            const SizedBox(height: DesignTokens.spacingLarge),
+            Text(
+              S.current.noWordsFound,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: DesignTokens.spacingMedium),
+            Text(
+              S.current.noWordsFoundInCategory(category, query),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DesignTokens.spacingMedium),
+            TextButton(
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                });
+              },
+              child: Text(S.current.clearSearch),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建错误视图
+  Widget _buildErrorView(String category, String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DesignTokens.spacingXLarge),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: DesignTokens.spacingLarge),
+            Text(
+              S.current.loadFailed,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: DesignTokens.spacingMedium),
+            Text(
+              error,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DesignTokens.spacingLarge),
+            ElevatedButton(
+              onPressed: () => setState(() {}),
+              child: Text(S.current.retry),
             ),
           ],
         ),
@@ -249,30 +472,26 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
               color: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: DesignTokens.spacingLarge),
-            
             Text(
-              '请先登录',
+              S.current.pleaseLoginFirst,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: DesignTokens.spacingMedium),
-            
             Text(
-              '登录后可以查看您收录的单词',
+              S.current.loginToViewCollectedWords,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
               textAlign: TextAlign.center,
             ),
-            
             const SizedBox(height: DesignTokens.spacingXLarge),
-            
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => context.go(RoutePaths.login),
-                child: const Text('立即登录'),
+                child: Text(S.current.loginNow),
               ),
             ),
           ],
@@ -282,7 +501,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
   }
 
   /// 构建单词卡片
-  Widget _buildWordCard(Map<String, dynamic> wordData) {
+  Widget _buildWordCard(WordModel word) {
     return Card(
       margin: const EdgeInsets.only(bottom: DesignTokens.spacingMedium),
       child: ListTile(
@@ -290,19 +509,21 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
         title: Row(
           children: [
             Text(
-              wordData['word'] ?? '',
+              word.word,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-            const SizedBox(width: DesignTokens.spacingSmall),
-            Text(
-              wordData['phonetic'] ?? '',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontFamily: 'Inter', // 强制使用Inter字体显示音标
+            if (word.usIpa != null && word.usIpa!.isNotEmpty) ...[
+              const SizedBox(width: DesignTokens.spacingSmall),
+              Text(
+                word.usIpa!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontFamily: 'Inter', // 强制使用Inter字体显示音标
+                    ),
               ),
-            ),
+            ],
           ],
         ),
         subtitle: Column(
@@ -310,22 +531,24 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
           children: [
             const SizedBox(height: DesignTokens.spacingSmall),
             Text(
-              wordData['meaning'] ?? '',
+              word.primaryMeaning,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (wordData['tags'] != null && wordData['tags'].isNotEmpty) ...[
+            if (word.partsOfSpeech.isNotEmpty) ...[
               const SizedBox(height: DesignTokens.spacingSmall),
               Wrap(
                 spacing: DesignTokens.spacingSmall,
-                children: (wordData['tags'] as List<String>)
-                    .map((tag) => Chip(
-                          label: Text(
-                            tag,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                        ))
-                    .toList(),
+                children: word.partsOfSpeech.take(3).map((pos) {
+                  return Chip(
+                    label: Text(
+                      pos,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.secondaryContainer,
+                  );
+                }).toList(),
               ),
             ],
           ],
@@ -337,40 +560,66 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
               icon: const Icon(Icons.volume_up_outlined),
               onPressed: () {
                 // TODO: 播放发音
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.current.pronunciationFeatureNotImplemented)),
+                );
               },
             ),
             PopupMenuButton<String>(
-              onSelected: (value) => _handleWordAction(value, wordData),
+              onSelected: (value) => _handleWordAction(value, word),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'favorite',
-                  child: ListTile(
-                    leading: Icon(Icons.favorite_border),
-                    title: Text('切换收录状态'),
-                    dense: true,
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final isFavoritedAsync =
+                          ref.watch(isWordFavoritedProvider(word.id));
+                      return isFavoritedAsync.when(
+                        data: (isFavorited) => ListTile(
+                          leading: Icon(
+                            isFavorited
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isFavorited ? Colors.red : null,
+                          ),
+                          title: Text(isFavorited ? S.current.removeFromCollection : S.current.addToCollection),
+                          dense: true,
+                        ),
+                        loading: () => const ListTile(
+                          leading: CircularProgressIndicator(),
+                          title: Text('...'),
+                          dense: true,
+                        ),
+                        error: (_, __) => const ListTile(
+                          leading: Icon(Icons.favorite_border),
+                          title: Text('收录'),
+                          dense: true,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem<String>(
                   value: 'mastered',
                   child: ListTile(
                     leading: Icon(Icons.check_circle_outline),
-                    title: Text('标记为已掌握'),
+                    title: Text(S.current.markAsMastered),
                     dense: true,
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem<String>(
                   value: 'learning',
                   child: ListTile(
                     leading: Icon(Icons.school_outlined),
-                    title: Text('标记为学习中'),
+                    title: Text(S.current.markAsLearning),
                     dense: true,
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem<String>(
                   value: 'remove',
                   child: ListTile(
                     leading: Icon(Icons.delete_outline, color: Colors.red),
-                    title: Text('移除收录', style: TextStyle(color: Colors.red)),
+                    title: Text(S.current.removeWord, style: TextStyle(color: Colors.red)),
                     dense: true,
                   ),
                 ),
@@ -379,103 +628,140 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
           ],
         ),
         onTap: () {
-          // TODO: 跳转到单词详情页
-          if (wordData['id'] != null) {
-            context.push(RoutePaths.buildWordDetailPath(wordData['id']));
-          }
+          context.push(RoutePaths.buildWordDetailPath(word.id));
         },
       ),
     );
   }
 
   /// 处理单词操作
-  void _handleWordAction(String action, Map<String, dynamic> wordData) {
+  void _handleWordAction(String action, WordModel word) {
     switch (action) {
       case 'favorite':
-        // TODO: 切换收录状态
+        _toggleFavorite(word);
         break;
       case 'mastered':
-        // TODO: 标记为已掌握
+        _showNotImplementedDialog('标记为已掌握');
         break;
       case 'learning':
-        // TODO: 标记为学习中
+        _showNotImplementedDialog('标记为学习中');
         break;
       case 'remove':
-        _showRemoveWordDialog(wordData);
+        _showRemoveWordDialog(word);
         break;
     }
   }
 
+  /// 切换收藏状态
+  Future<void> _toggleFavorite(WordModel word) async {
+    try {
+      final favoriteToggle = ref.read(favoriteToggleProvider(word.id).notifier);
+      final newFavoriteState = await favoriteToggle.toggle();
+
+      // 确保UI更新
+      if (mounted) {
+        setState(() {});
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newFavoriteState
+                ? S.current.wordAddedToCollection(word.word)
+                : S.current.wordRemovedFromCollection(word.word)),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(S.current.operationFailed(e.toString())),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 显示功能未实现对话框
+  void _showNotImplementedDialog(String feature) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.featureNotImplemented),
+        content: Text(S.current.featureWillBeImplemented(feature)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(S.current.gotIt),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 显示移除单词确认对话框
-  void _showRemoveWordDialog(Map<String, dynamic> wordData) {
+  void _showRemoveWordDialog(WordModel word) {
     showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('移除收录'),
-        content: Text('确定要移除单词 "${wordData['word']}" 吗？'),
+        title: Text(S.current.confirmRemoveWord),
+        content: Text(S.current.confirmRemoveWordMessage(word.word)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('移除'),
+            child: Text(S.current.remove),
           ),
         ],
       ),
     ).then((confirmed) {
       if (confirmed == true) {
-        // TODO: 实现移除收录功能
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('已移除单词："${wordData['word']}"'),
-          ),
-        );
+        _toggleFavorite(word); // 移除收藏就是取消收藏
       }
     });
   }
 
   /// 获取空状态图标
   IconData _getEmptyStateIcon(String category) {
-    switch (category) {
-      case '收录':
-        return Icons.favorite_outline;
-      case '已掌握':
-        return Icons.check_circle_outline;
-      case '学习中':
-        return Icons.school_outlined;
-      default:
-        return Icons.list_alt_outlined;
+    if (category == S.current.collected) {
+      return Icons.favorite_outline;
+    } else if (category == S.current.mastered) {
+      return Icons.check_circle_outline;
+    } else if (category == S.current.learning) {
+      return Icons.school_outlined;
     }
+    return Icons.list_alt_outlined;
   }
 
   /// 获取空状态标题
   String _getEmptyStateTitle(String category) {
-    switch (category) {
-      case '收录':
-        return '还没有收录的单词';
-      case '已掌握':
-        return '还没有已掌握的单词';
-      case '学习中':
-        return '还没有学习中的单词';
-      default:
-        return '还没有收录任何单词';
+    if (category == S.current.collected) {
+      return S.current.noCollectedWords;
+    } else if (category == S.current.mastered) {
+      return S.current.noMasteredWords;
+    } else if (category == S.current.learning) {
+      return S.current.noLearningWords;
     }
+    return S.current.noCollectedWords;
   }
 
   /// 获取空状态副标题
   String _getEmptyStateSubtitle(String category) {
-    switch (category) {
-      case '收录':
-        return '在搜索页面找到喜欢的单词，点击收录按钮将它们添加到这里';
-      case '已掌握':
-        return '学习过程中掌握的单词会出现在这里';
-      case '学习中':
-        return '正在学习的单词会出现在这里';
-      default:
-        return '开始搜索和收录您感兴趣的单词吧';
+    if (category == S.current.collected) {
+      return S.current.noCollectedWordsSubtitle;
+    } else if (category == S.current.mastered) {
+      return S.current.noMasteredWordsSubtitle;
+    } else if (category == S.current.learning) {
+      return S.current.noLearningWordsSubtitle;
     }
+    return S.current.noCollectedWordsSubtitle;
   }
 }

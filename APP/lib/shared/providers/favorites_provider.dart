@@ -3,8 +3,10 @@ import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/database_provider.dart';
+import '../../core/database/tables/user_words_table.dart';
 import '../models/word_model.dart';
 import 'auth_provider.dart';
+import 'learning_provider.dart';
 
 part 'favorites_provider.g.dart';
 
@@ -37,57 +39,68 @@ class FavoriteToggle extends _$FavoriteToggle {
   }
 
   /// 切换收藏状态
+
   Future<bool> toggle() async {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      throw Exception('用户未登录');
+      throw Exception('\u7528\u6237\u672a\u767b\u5f55');
     }
 
     final database = ref.read(databaseProvider);
     final currentState = state.valueOrNull ?? false;
+    final isFavoriting = !currentState;
 
     try {
       await database.transaction(() async {
         final existingQuery = database.select(database.userWordsTable)
           ..where((tbl) => tbl.userId.equals(user.id) & tbl.wordId.equals(wordId));
-        
+
         final existing = await existingQuery.getSingleOrNull();
-        
+
         if (existing != null) {
-          // 更新现有记录
           await (database.update(database.userWordsTable)
                 ..where((tbl) => tbl.id.equals(existing.id)))
               .write(UserWordsTableCompanion(
-                isFavorited: Value(!currentState),
+                isFavorited: Value(isFavoriting),
+                learningStatus: isFavoriting
+                    ? Value(LearningStatus.notLearned.value)
+                    : const Value.absent(),
+                reviewCount: isFavoriting ? const Value(0) : const Value.absent(),
+                correctCount: isFavoriting ? const Value(0) : const Value.absent(),
+                incorrectCount: isFavoriting ? const Value(0) : const Value.absent(),
+                lastReviewedAt: isFavoriting ? const Value(null) : const Value.absent(),
+                nextReviewAt: isFavoriting ? const Value(null) : const Value.absent(),
+                reviewInterval: isFavoriting ? const Value(1) : const Value.absent(),
+                easeFactor: isFavoriting ? const Value(2.5) : const Value.absent(),
                 updatedAt: Value(DateTime.now()),
               ));
         } else {
-          // 创建新记录
           await database.into(database.userWordsTable).insert(
             UserWordsTableCompanion.insert(
               userId: user.id,
               wordId: wordId,
-              isFavorited: Value(!currentState),
+              isFavorited: Value(isFavoriting),
+              learningStatus: Value(LearningStatus.notLearned.value),
             ),
           );
         }
       });
 
-      // 更新本地状态
-      final newState = !currentState;
+      final newState = isFavoriting;
       state = AsyncValue.data(newState);
-      
-      // 使相关provider失效以刷新数据
+
       ref.invalidate(isWordFavoritedProvider(wordId));
       ref.invalidate(favoriteWordsProvider);
-      
+      ref.invalidate(favoriteWordsCountProvider);
+      ref.invalidate(learningSessionProvider);
+
       return newState;
     } catch (e) {
-      print('切换收藏状态失败: $e');
-      // 保持原状态
-      throw Exception('操作失败: $e');
+      print('\u5207\u6362\u6536\u85cf\u72b6\u6001\u5931\u8d25: $e');
+      throw Exception('\u64cd\u4f5c\u5931\u8d25: $e');
     }
   }
+
 }
 
 /// 获取用户收藏的单词列表

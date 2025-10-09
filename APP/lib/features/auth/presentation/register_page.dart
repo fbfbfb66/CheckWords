@@ -6,8 +6,10 @@ import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_button.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 注册页面
 class RegisterPage extends ConsumerStatefulWidget {
@@ -40,6 +42,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
     // 监听认证状态变化
     ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (previous, next) {
       next.whenOrNull(
@@ -61,7 +66,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('注册'),
+        title: Text(S.current.register),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -83,7 +88,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 const SizedBox(height: DesignTokens.spacingMedium),
                 
                 Text(
-                  '创建新账户',
+                  S.current.createNewAccount,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -92,7 +97,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 const SizedBox(height: DesignTokens.spacingSmall),
                 
                 Text(
-                  '加入CheckWords，开始您的学习之旅',
+                  S.current.joinCheckWords,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -104,8 +109,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 // 姓名输入框
                 CustomTextField(
                   controller: _nameController,
-                  labelText: '姓名',
-                  hintText: '请输入您的姓名',
+                  labelText: S.current.name,
+                  hintText: S.current.pleaseEnterYourName,
                   prefixIcon: Icons.person_outlined,
                   textInputAction: TextInputAction.next,
                   validator: _validateName,
@@ -116,8 +121,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 // 邮箱输入框
                 CustomTextField(
                   controller: _emailController,
-                  labelText: '邮箱',
-                  hintText: '请输入邮箱地址',
+                  labelText: S.current.email,
+                  hintText: S.current.emailAddressHint,
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -129,8 +134,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 // 密码输入框
                 CustomTextField(
                   controller: _passwordController,
-                  labelText: '密码',
-                  hintText: '请输入密码（至少6位）',
+                  labelText: S.current.password,
+                  hintText: S.current.passwordWithMinLengthHint,
                   prefixIcon: Icons.lock_outlined,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
@@ -148,8 +153,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 // 确认密码输入框
                 CustomTextField(
                   controller: _confirmPasswordController,
-                  labelText: '确认密码',
-                  hintText: '请再次输入密码',
+                  labelText: S.current.confirmPassword,
+                  hintText: S.current.confirmPasswordHint,
                   prefixIcon: Icons.lock_outlined,
                   obscureText: _obscureConfirmPassword,
                   textInputAction: TextInputAction.done,
@@ -175,7 +180,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     Expanded(
                       child: Wrap(
                         children: [
-                          const Text('我已阅读并同意'),
+                          Text(S.current.iHaveReadAndAgree),
                           TextButton(
                             onPressed: () {
                               // TODO: 显示用户协议
@@ -185,9 +190,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text('《用户协议》'),
+                            child: Text(S.current.userAgreement),
                           ),
-                          const Text('和'),
+                          Text(S.current.and),
                           TextButton(
                             onPressed: () {
                               // TODO: 显示隐私政策
@@ -197,7 +202,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text('《隐私政策》'),
+                            child: Text(S.current.privacyPolicy),
                           ),
                         ],
                       ),
@@ -211,7 +216,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 LoadingButton(
                   onPressed: _agreeToTerms ? _handleRegister : null,
                   isLoading: authState.isLoading,
-                  child: const Text('注册'),
+                  child: Text(S.current.register),
                 ),
                 
                 const SizedBox(height: DesignTokens.spacingLarge),
@@ -220,10 +225,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('已有账户？'),
+                    Text(S.current.haveAccount),
                     TextButton(
                       onPressed: () => context.pop(),
-                      child: const Text('立即登录'),
+                      child: Text(S.current.loginNowLink),
                     ),
                   ],
                 ),
@@ -240,7 +245,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先同意用户协议和隐私政策')),
+        SnackBar(content: Text(S.current.pleaseAgreeToTerms)),
       );
       return;
     }
@@ -258,7 +263,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   /// 验证姓名
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return '请输入您的姓名';
+      return S.current.pleaseEnterYourName;
     }
     
     if (value.trim().length < 2) {
@@ -275,12 +280,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   /// 验证邮箱
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入邮箱地址';
+      return S.current.pleaseEnterEmailAddress;
     }
     
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     if (!emailRegex.hasMatch(value)) {
-      return '请输入有效的邮箱地址';
+      return S.current.pleaseEnterValidEmail;
     }
     
     return null;
@@ -289,7 +294,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   /// 验证密码
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入密码';
+      return S.current.pleaseEnterPassword;
     }
     
     if (value.length < 6) {
@@ -310,7 +315,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   /// 验证确认密码
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请确认密码';
+      return S.current.pleaseConfirmPassword;
     }
     
     if (value != _passwordController.text) {

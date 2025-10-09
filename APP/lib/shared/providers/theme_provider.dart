@@ -6,9 +6,9 @@ part 'theme_provider.g.dart';
 
 /// 应用字体枚举
 enum AppFont {
-  system('system', '跟随系统', null),
+  system('system', 'System', null),
   inter('inter', 'Inter', 'Inter'),
-  sourceHanSans('sourceHanSans', '思源黑体', 'SourceHanSansSC');
+  sourceHanSans('sourceHanSans', 'Source Han Sans', 'SourceHanSansSC');
 
   const AppFont(this.value, this.label, this.fontFamily);
 
@@ -27,9 +27,9 @@ enum AppFont {
 
 /// 主题模式枚举
 enum AppThemeMode {
-  system('system', '跟随系统'),
-  light('light', '浅色模式'),
-  dark('dark', '深色模式');
+  system('system', 'System'),
+  light('light', 'Light'),
+  dark('dark', 'Dark');
 
   const AppThemeMode(this.value, this.label);
 

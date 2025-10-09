@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/providers/theme_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/services/debug_service.dart';
-import '../../words/presentation/debug_helper.dart';
 
 /// 设置页面
 class SettingsPage extends ConsumerWidget {
@@ -17,13 +18,13 @@ class SettingsPage extends ConsumerWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('设置'),
+        title: Text(S.current.settings),
         centerTitle: true,
       ),
       body: themeSettings.when(
         data: (settings) => _buildSettingsContent(context, ref, settings),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('加载失败：$error')),
+        error: (error, stack) => Center(child: Text('${S.current.error}: $error')),
       ),
     );
   }
@@ -71,8 +72,8 @@ class SettingsPage extends ConsumerWidget {
               Icons.palette_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('外观设置'),
-            subtitle: const Text('自定义应用的外观和感觉'),
+            title: Text(S.current.themeSettings),
+            subtitle: Text(S.current.appearanceCustomization),
           ),
           
           const Divider(height: 1),
@@ -80,8 +81,8 @@ class SettingsPage extends ConsumerWidget {
           // 主题模式选择
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
-            title: const Text('主题模式'),
-            subtitle: Text(_getThemeDisplayText(context, settings.mode)),
+            title: Text(S.current.themeMode),
+            subtitle: Text(_getThemeModeDisplayName(settings.mode)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showThemeModeDialog(context, ref, settings.mode),
           ),
@@ -91,8 +92,8 @@ class SettingsPage extends ConsumerWidget {
           // 字体设置
           ListTile(
             leading: const Icon(Icons.font_download_outlined),
-            title: const Text('字体'),
-            subtitle: Text(settings.font.label),
+            title: Text(S.current.font),
+            subtitle: Text(_getFontDisplayName(settings.font)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showFontSelectionDialog(context, ref, settings.font),
           ),
@@ -111,22 +112,22 @@ class SettingsPage extends ConsumerWidget {
               Icons.school_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('学习设置'),
-            subtitle: const Text('配置学习相关的选项'),
+            title: Text(S.current.learningSettings),
+            subtitle: Text(S.current.learningSettingsDescription),
           ),
           
           const Divider(height: 1),
           
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
-            title: const Text('学习提醒'),
-            subtitle: const Text('设置定时学习提醒'),
+            title: Text(S.current.studyReminder),
+            subtitle: Text(S.current.studyReminderDescription),
             trailing: Switch(
               value: true, // TODO: 从设置中读取
               onChanged: (value) {
                 // TODO: 保存设置
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('学习提醒功能待实现')),
+                  SnackBar(content: Text(S.current.featureNotImplemented)),
                 );
               },
             ),
@@ -136,8 +137,8 @@ class SettingsPage extends ConsumerWidget {
           
           ListTile(
             leading: const Icon(Icons.volume_up_outlined),
-            title: const Text('自动播放发音'),
-            subtitle: const Text('查看单词时自动播放发音'),
+            title: Text(S.current.autoPlayPronunciation),
+            subtitle: Text(S.current.autoPlayPronunciationDescription),
             trailing: Switch(
               value: false, // TODO: 从设置中读取
               onChanged: (value) {
@@ -150,12 +151,12 @@ class SettingsPage extends ConsumerWidget {
           
           ListTile(
             leading: const Icon(Icons.speed_outlined),
-            title: const Text('复习间隔'),
-            subtitle: const Text('调整记忆曲线的复习间隔'),
+            title: Text(S.current.reviewInterval),
+            subtitle: Text(S.current.reviewIntervalDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('复习间隔设置待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -174,20 +175,20 @@ class SettingsPage extends ConsumerWidget {
               Icons.storage_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('数据管理'),
-            subtitle: const Text('管理您的学习数据'),
+            title: Text(S.current.dataManagement),
+            subtitle: Text(S.current.dataManagementDescription),
           ),
           
           const Divider(height: 1),
           
           ListTile(
             leading: const Icon(Icons.cloud_upload_outlined),
-            title: const Text('数据同步'),
-            subtitle: const Text('将数据同步到云端'),
+            title: Text(S.current.dataSync),
+            subtitle: Text(S.current.dataSyncDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('数据同步功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -196,36 +197,26 @@ class SettingsPage extends ConsumerWidget {
           
           ListTile(
             leading: const Icon(Icons.download_outlined),
-            title: const Text('导入单词库'),
-            subtitle: const Text('从文件导入单词数据'),
+            title: Text(S.current.importWordbook),
+            subtitle: Text(S.current.importWordbookDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('导入单词库功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
-          
+  
           const Divider(height: 1),
-          
-          ListTile(
-            leading: const Icon(Icons.build_outlined),
-            title: const Text('数据库诊断'),
-            subtitle: const Text('检查数据库状态和修复问题'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => DebugHelper.showQuickDiagnosis(context, ref),
-          ),
-          
-          const Divider(height: 1),
-          
+
           ListTile(
             leading: const Icon(Icons.upload_outlined),
-            title: const Text('导出数据'),
-            subtitle: const Text('导出您的学习数据'),
+            title: Text(S.current.exportData),
+            subtitle: Text(S.current.exportDataDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('导出数据功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -238,10 +229,10 @@ class SettingsPage extends ConsumerWidget {
               color: Theme.of(context).colorScheme.error,
             ),
             title: Text(
-              '清除数据',
+              S.current.clearData,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-            subtitle: const Text('清除所有本地数据'),
+            subtitle: Text(S.current.clearDataDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showClearDataDialog(context),
           ),
@@ -260,34 +251,62 @@ class SettingsPage extends ConsumerWidget {
               Icons.settings_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('其他'),
-            subtitle: const Text('更多设置选项'),
+            title: Text(S.current.other),
+            subtitle: Text(S.current.otherSettingsDescription),
           ),
           
           const Divider(height: 1),
           
-          ListTile(
-            leading: const Icon(Icons.language_outlined),
-            title: const Text('语言'),
-            subtitle: const Text('简体中文'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('语言设置功能待实现')),
-              );
-            },
-          ),
+          Consumer(
+              builder: (context, ref, child) {
+                final localeState = ref.watch(localeNotifierProvider);
+                final currentLocale = localeState.currentLocale;
+                return ListTile(
+                  leading: const Icon(Icons.language_outlined),
+                  title: Text(S.current.language),
+                  subtitle: Text(currentLocale.displayName),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    showDialog<AppLocale>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(S.current.language),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: AppLocale.values.map((locale) => RadioListTile<AppLocale>(
+                            value: locale,
+                            groupValue: currentLocale,
+                            title: Text(locale.displayName),
+                            onChanged: (value) => Navigator.of(context).pop(value),
+                          )).toList(),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text(S.current.cancel),
+                          ),
+                        ],
+                      ),
+                    ).then((selectedLocale) {
+                      if (selectedLocale != null && selectedLocale != currentLocale) {
+                        ref.read(localeNotifierProvider.notifier).changeLocale(selectedLocale);
+                      }
+                    });
+                  },
+                );
+              },
+            ),
           
           const Divider(height: 1),
           
           ListTile(
             leading: const Icon(Icons.security_outlined),
-            title: const Text('隐私设置'),
-            subtitle: const Text('管理隐私相关设置'),
+            title: Text(S.current.privacySettings),
+            subtitle: Text(S.current.privacySettingsDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('隐私设置功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -296,12 +315,12 @@ class SettingsPage extends ConsumerWidget {
           
           ListTile(
             leading: const Icon(Icons.feedback_outlined),
-            title: const Text('意见反馈'),
-            subtitle: const Text('向我们提供您的建议'),
+            title: Text(S.current.feedback),
+            subtitle: Text(S.current.feedbackDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('意见反馈功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -310,12 +329,12 @@ class SettingsPage extends ConsumerWidget {
           
           ListTile(
             leading: const Icon(Icons.star_outline),
-            title: const Text('评价应用'),
-            subtitle: const Text('在应用商店给我们评分'),
+            title: Text(S.current.rateApp),
+            subtitle: Text(S.current.rateAppDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('评价功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -355,7 +374,7 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: DesignTokens.spacingSmall),
             
             Text(
-              '离线优先的词汇学习应用',
+              S.current.offlineFirst,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -372,20 +391,20 @@ class SettingsPage extends ConsumerWidget {
     showDialog<AppThemeMode>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择主题模式'),
+        title: Text(S.current.themeMode),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: AppThemeMode.values.map((mode) => RadioListTile<AppThemeMode>(
             value: mode,
             groupValue: currentMode,
-            title: Text(mode.label),
+            title: Text(_getThemeModeDisplayName(mode)),
             onChanged: (value) => Navigator.of(context).pop(value),
           )).toList(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
         ],
       ),
@@ -401,17 +420,17 @@ class SettingsPage extends ConsumerWidget {
     showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('清除数据'),
+        title: Text(S.current.clearData),
         content: const Text('此操作将清除所有本地数据，包括收藏的单词、学习记录等，且无法恢复。确定要继续吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('清除'),
+            child: Text(S.current.clear),
           ),
         ],
       ),
@@ -419,32 +438,19 @@ class SettingsPage extends ConsumerWidget {
       if (confirmed == true) {
         // TODO: 实现清除数据功能
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('清除数据功能待实现')),
+          SnackBar(content: Text(S.current.featureNotImplemented)),
         );
       }
     });
   }
 
-  /// 获取主题显示文本
-  String _getThemeDisplayText(BuildContext context, AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.system:
-        final brightness = MediaQuery.of(context).platformBrightness;
-        final currentMode = brightness == Brightness.dark ? '深色' : '浅色';
-        return '跟随系统 (当前: $currentMode)';
-      case AppThemeMode.light:
-        return '浅色模式';
-      case AppThemeMode.dark:
-        return '深色模式';
-    }
-  }
-
+  
   /// 显示字体选择对话框
   void _showFontSelectionDialog(BuildContext context, WidgetRef ref, AppFont currentFont) {
     showDialog<AppFont>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择字体'),
+        title: Text(S.current.font),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -477,7 +483,7 @@ class SettingsPage extends ConsumerWidget {
                           ),
                           Expanded(
                             child: Text(
-                              font.label,
+                              _getFontDisplayName(font),
                               style: TextStyle(
                                 fontFamily: font.fontFamily,
                                 fontSize: 18,
@@ -523,7 +529,7 @@ class SettingsPage extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
         ],
       ),
@@ -557,5 +563,30 @@ class SettingsPage extends ConsumerWidget {
         return 'Source Han Sans - Aa Bb Cc 123';
     }
   }
+
+  /// 获取字体显示名称（国际化）
+  String _getFontDisplayName(AppFont font) {
+    switch (font) {
+      case AppFont.system:
+        return S.current.appDefault; // 使用系统默认
+      case AppFont.inter:
+        return S.current.fontInter; // Inter
+      case AppFont.sourceHanSans:
+        return S.current.fontSourceHanSans; // 思源黑体
+    }
+  }
+
+  /// 获取主题模式显示名称（国际化）
+  String _getThemeModeDisplayName(AppThemeMode mode) {
+    switch (mode) {
+      case AppThemeMode.system:
+        return S.current.followSystem; // 跟随系统
+      case AppThemeMode.light:
+        return S.current.lightMode; // 浅色模式
+      case AppThemeMode.dark:
+        return S.current.darkMode; // 深色模式
+    }
+  }
+
 
 }

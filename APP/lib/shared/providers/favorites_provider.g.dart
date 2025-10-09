@@ -326,7 +326,7 @@ final favoriteWordsCountProvider = AutoDisposeFutureProvider<int>.internal(
 );
 
 typedef FavoriteWordsCountRef = AutoDisposeFutureProviderRef<int>;
-String _$favoriteToggleHash() => r'a343291745931fc78891ddd4efb2fcb74115cdd6';
+String _$favoriteToggleHash() => r'6c6f52d96f62cb6a80dd3e776b1e8964b78bb1f2';
 
 abstract class _$FavoriteToggle
     extends BuildlessAutoDisposeAsyncNotifier<bool> {

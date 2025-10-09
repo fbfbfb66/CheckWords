@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_button.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 忘记密码页面
 class ForgotPasswordPage extends ConsumerStatefulWidget {
@@ -30,9 +32,12 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('忘记密码'),
+        title: Text(S.current.forgotPassword),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -63,7 +68,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           
           // 标题和说明
           Text(
-            '重置密码',
+            S.current.resetPassword,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -72,7 +77,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           const SizedBox(height: DesignTokens.spacingMedium),
           
           Text(
-            '请输入您的邮箱地址，我们将发送重置密码的链接到您的邮箱',
+            S.current.resetPasswordDescription,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -84,8 +89,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           // 邮箱输入框
           CustomTextField(
             controller: _emailController,
-            labelText: '邮箱',
-            hintText: '请输入您的邮箱地址',
+            labelText: S.current.email,
+            hintText: S.current.emailAddressHint,
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
@@ -99,7 +104,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           LoadingButton(
             onPressed: _handleForgotPassword,
             isLoading: _isLoading,
-            child: const Text('发送重置邮件'),
+            child: Text(S.current.sendResetEmail),
           ),
           
           const SizedBox(height: DesignTokens.spacingLarge),
@@ -108,10 +113,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('想起密码了？'),
+              Text(S.current.rememberPassword),
               TextButton(
                 onPressed: () => context.pop(),
-                child: const Text('返回登录'),
+                child: Text(S.current.backToLogin),
               ),
             ],
           ),
@@ -137,7 +142,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         
         // 成功标题
         Text(
-          '邮件已发送',
+          S.current.emailSent,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.primary,
@@ -148,7 +153,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         
         // 成功说明
         Text(
-          '我们已经向 ${_emailController.text} 发送了重置密码的邮件，请查收并按照邮件中的说明重置您的密码。',
+          S.current.emailSentDescription(_emailController.text),
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -173,7 +178,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     ),
                     const SizedBox(width: DesignTokens.spacingSmall),
                     Text(
-                      '注意事项',
+                      S.current.importantNotes,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.primary,
@@ -183,9 +188,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 ),
                 const SizedBox(height: DesignTokens.spacingSmall),
                 Text(
-                  '• 请检查您的收件箱和垃圾邮件箱\n'
-                  '• 重置链接将在24小时内有效\n'
-                  '• 如果未收到邮件，请检查邮箱地址是否正确',
+                  S.current.emailSentInstructions,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -202,7 +205,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.secondary,
           ),
-          child: const Text('重新发送'),
+          child: Text(S.current.resendEmail),
         ),
         
         const SizedBox(height: DesignTokens.spacingMedium),
@@ -210,7 +213,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         // 返回登录按钮
         TextButton(
           onPressed: () => context.pop(),
-          child: const Text('返回登录'),
+          child: Text(S.current.backToLogin),
         ),
       ],
     );

@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/favorites_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 我的页面
 class ProfilePage extends ConsumerStatefulWidget {
@@ -18,6 +21,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
     
     return authState.when(
       loading: () => const Scaffold(
@@ -30,11 +36,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               const Icon(Icons.error_outline, size: 64),
               const SizedBox(height: 16),
-              Text('加载失败: $error'),
+              Text('${S.current.error}: $error'),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref.refresh(authNotifierProvider),
-                child: const Text('重试'),
+                child: Text(S.current.retry),
               ),
             ],
           ),
@@ -47,7 +53,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildContent(BuildContext context, bool isAuthenticated) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('我的'),
+        title: Text(S.current.profile),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -99,7 +105,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: DesignTokens.spacingLarge),
             
             Text(
-              '请登录',
+              S.current.pleaseLogin,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -107,7 +113,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: DesignTokens.spacingMedium),
             
             Text(
-              '登录后可以收藏单词、查看学习记录等功能',
+              S.current.loginToUseFullFeatures,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -120,7 +126,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => context.go(RoutePaths.login),
-                child: const Text('立即登录'),
+                child: Text(S.current.login),
               ),
             ),
             
@@ -128,7 +134,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             
             TextButton(
               onPressed: () => context.go(RoutePaths.register),
-              child: const Text('还没有账户？立即注册'),
+              child: Text(S.current.registerNowText),
             ),
           ],
         ),
@@ -198,6 +204,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 构建收录单词卡片
   Widget _buildWordCollectionCard(BuildContext context) {
+    final favoriteWordsCountAsync = ref.watch(favoriteWordsCountProvider);
+    final favoriteWordsAsync = ref.watch(favoriteWordsProvider(limit: 3)); // 获取收藏的单词作为预览
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignTokens.spacingLarge),
@@ -208,28 +217,112 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '收录单词',
+                  S.current.collectedWords,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 TextButton(
                   onPressed: () => context.push(RoutePaths.collectedWords),
-                  child: const Text('查看全部'),
+                  child: Text(S.current.viewAll),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: DesignTokens.spacingMedium),
-            
-            // TODO: 实现从数据库获取真实统计数据
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingLarge),
-                child: Text(
-                  '暂无收录数据',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+
+            // 显示收藏统计和预览
+            favoriteWordsCountAsync.when(
+              data: (count) {
+                if (count == 0) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingLarge),
+                      child: Text(
+                        S.current.noCollectedData,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 统计信息
+                    Text(
+                      S.current.collectedCountWords(count),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+
+                    if (count > 0) ...[
+                      const SizedBox(height: DesignTokens.spacingMedium),
+
+                      // 最近收藏的单词预览
+                      favoriteWordsAsync.when(
+                        data: (words) {
+                          if (words.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                S.current.recentWordsTitle,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: DesignTokens.spacingSmall),
+                              Wrap(
+                                spacing: DesignTokens.spacingSmall,
+                                runSpacing: DesignTokens.spacingSmall,
+                                children: words.take(3).map((word) {
+                                  return Chip(
+                                    label: Text(
+                                      word.word,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () => const SizedBox(
+                          height: 40,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (_, __) => Text(
+                          '加载失败',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+              loading: () => const SizedBox(
+                height: 80,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (_, __) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingLarge),
+                  child: Text(
+                    '加载失败',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
               ),
@@ -249,8 +342,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildListTile(
             context,
             icon: Icons.history,
-            title: '学习记录',
-            subtitle: '查看您的学习历史和进度',
+            title: S.current.learningRecordTitle,
+            subtitle: S.current.learningRecordSubtitle,
             onTap: () {
               // TODO: 跳转到学习记录页面
             },
@@ -261,8 +354,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildListTile(
             context,
             icon: Icons.trending_up,
-            title: '学习统计',
-            subtitle: '查看详细的学习数据分析',
+            title: S.current.learningStatsTitle,
+            subtitle: S.current.learningStatsSubtitle,
             onTap: () {
               // TODO: 跳转到学习统计页面
             },
@@ -273,12 +366,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildListTile(
             context,
             icon: Icons.backup,
-            title: '数据备份',
-            subtitle: '备份您的学习数据到云端',
+            title: S.current.dataBackupTitle,
+            subtitle: S.current.dataBackupSubtitle,
             onTap: () {
               // TODO: 实现数据备份功能
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('数据备份功能待实现')),
+                SnackBar(content: Text(S.current.featureNotImplemented)),
               );
             },
           ),
@@ -288,8 +381,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildListTile(
             context,
             icon: Icons.help_outline,
-            title: '帮助与反馈',
-            subtitle: '获取帮助或提交反馈',
+            title: S.current.helpAndFeedbackTitle,
+            subtitle: S.current.helpAndFeedbackSubtitle,
             onTap: () {
               // TODO: 跳转到帮助页面
             },
@@ -300,8 +393,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildListTile(
             context,
             icon: Icons.info_outline,
-            title: '关于',
-            subtitle: '应用版本和相关信息',
+            title: S.current.aboutTitle,
+            subtitle: S.current.aboutSubtitle,
             onTap: () {
               // TODO: 显示关于对话框
               _showAboutDialog(context);
@@ -344,8 +437,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       applicationVersion: '1.0.0',
       applicationIcon: const Icon(Icons.book, size: 48),
       children: [
-        const Text('一款离线优先的词汇学习应用'),
-        const Text('帮助您更好地学习和记忆英语单词'),
+        Text(S.current.appSubtitle),
+        Text(S.current.appSubtitle),
       ],
     );
   }

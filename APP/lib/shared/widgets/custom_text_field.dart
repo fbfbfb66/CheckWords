@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/design_tokens.dart';
+import '../../l10n/generated/l10n_simple.dart';
 
 /// 自定义文本输入框
 class CustomTextField extends StatelessWidget {
@@ -165,7 +166,7 @@ class SearchTextField extends StatelessWidget {
   const SearchTextField({
     super.key,
     this.controller,
-    this.hintText = '搜索...',
+    this.hintText,
     this.onChanged,
     this.onSubmitted,
     this.onClear,
@@ -174,7 +175,7 @@ class SearchTextField extends StatelessWidget {
   });
 
   final TextEditingController? controller;
-  final String hintText;
+  final String? hintText;
   final void Function(String)? onChanged;
   final void Function(String)? onSubmitted;
   final VoidCallback? onClear;
@@ -187,7 +188,7 @@ class SearchTextField extends StatelessWidget {
     
     return CustomTextField(
       controller: controller,
-      hintText: hintText,
+      hintText: hintText ?? S.current.searchHint,
       prefixIcon: Icons.search,
       enabled: enabled,
       autofocus: autofocus,

@@ -17,6 +17,7 @@ class RoutePaths {
   static const String wordDetail = '/word/:id';
   static const String accountManagement = '/account';
   static const String collectedWords = '/collected-words';
+  static const String learning = '/learning';
 
   // === 路由构建辅助方法 ===
   
@@ -59,6 +60,7 @@ class RouteNames {
   static const String wordDetail = 'wordDetail';
   static const String accountManagement = 'accountManagement';
   static const String collectedWords = 'collectedWords';
+  static const String learning = 'learning';
 }
 
 /// 底部导航栏标签枚举

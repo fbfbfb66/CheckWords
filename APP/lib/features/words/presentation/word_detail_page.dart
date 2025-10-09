@@ -9,7 +9,9 @@ import '../../../app/theme/design_tokens.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/providers/words_provider.dart';
 import '../../../shared/providers/favorites_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/models/word_model.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 单词详情页面
 class WordDetailPage extends ConsumerStatefulWidget {
@@ -42,9 +44,12 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
   Widget build(BuildContext context) {
     final wordAsync = ref.watch(wordByIdProvider(widget.wordId));
 
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('单词详情'),
+        title: Text(S.current.wordDetail),
       ),
       body: SafeArea(
         child: wordAsync.when(

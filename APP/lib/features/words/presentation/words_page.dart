@@ -9,7 +9,9 @@ import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/models/word_model.dart';
 import '../../../shared/providers/words_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 import 'debug_helper.dart';
 
 /// 单词页面（首页）
@@ -42,9 +44,22 @@ class _WordsPageState extends ConsumerState<WordsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
+    return _buildScaffold();
+  }
+
+  Widget _buildScaffold() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CheckWords'),
+        title: Consumer(
+          builder: (context, ref, child) {
+            // 监听 locale 变化
+            ref.watch(localeNotifierProvider);
+            return Text('CheckWords');
+          },
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -70,7 +85,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
       padding: const EdgeInsets.all(DesignTokens.spacingMedium),
       child: SearchTextField(
         controller: _searchController,
-        hintText: '搜索单词...',
+        hintText: S.current.searchWordsHint,
         onChanged: _handleSearchChanged,
         onSubmitted: _handleSearchSubmitted,
         onClear: _handleSearchClear,
@@ -95,10 +110,10 @@ class _WordsPageState extends ConsumerState<WordsPage> {
         children: [
           if (_searchHistory.isNotEmpty)
             _buildSection(
-              title: '搜索历史',
+              title: S.current.searchHistoryTitle,
               hasMoreAction: true,
               onMorePressed: _showClearHistoryDialog,
-              moreText: '清除全部',
+              moreText: S.current.clearAll,
               child: _buildSearchHistory(),
             ),
           if (_searchHistory.isEmpty)
@@ -114,7 +129,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
                     ),
                     const SizedBox(height: DesignTokens.spacingLarge),
                     Text(
-                      '暂无搜索历史',
+                      S.current.noSearchHistoryText,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant,
@@ -122,7 +137,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
                     ),
                     const SizedBox(height: DesignTokens.spacingMedium),
                     Text(
-                      '搜索单词后，历史记录会出现在这里',
+                      S.current.searchHistoryDescription,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color:
@@ -150,7 +165,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
             vertical: DesignTokens.spacingSmall,
           ),
           child: Text(
-            '搜索 "" 的结果',
+            S.current.searchResultsFor(_currentQuery),
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -194,7 +209,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
               if (hasMoreAction && onMorePressed != null)
                 TextButton(
                   onPressed: onMorePressed,
-                  child: Text(moreText ?? '更多'),
+                  child: Text(moreText ?? S.current.moreText),
                 ),
             ],
           ),
@@ -242,7 +257,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
           loading: () => _buildHistoryBubble(
             displayWord: keyword,
             partsOfSpeech: const [],
-              meaning: '加载中…',
+              meaning: S.current.loadingText,
             isSkeleton: true,
           ),
           error: (_, __) => _buildHistoryBubble(
@@ -267,7 +282,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     final theme = Theme.of(context);
     final surface = theme.colorScheme.surfaceVariant;
     final onSurface = theme.colorScheme.onSurfaceVariant;
-    final effectiveMeaning = meaning.isNotEmpty ? meaning : '暂无释义';
+    final effectiveMeaning = meaning.isNotEmpty ? meaning : S.current.noMeaningAvailable;
 
     return Material(
       color: Colors.transparent,
@@ -445,14 +460,14 @@ class _WordsPageState extends ConsumerState<WordsPage> {
               ),
               const SizedBox(height: DesignTokens.spacingMedium),
               Text(
-                '查询不到相关单词',
+                S.current.noWordsFound,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: DesignTokens.spacingSmall),
               Text(
-                '没有找到与 "" 相关的单词',
+                S.current.noWordsFoundForQuery(query),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -463,16 +478,16 @@ class _WordsPageState extends ConsumerState<WordsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '请尝试：',
+                    S.current.pleaseTry,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                   ),
                   const SizedBox(height: DesignTokens.spacingXSmall),
-                  Text('· 检查拼写是否正确', style: _buildHintTextStyle()),
-                  Text('· 尝试使用同义词', style: _buildHintTextStyle()),
-                  Text('· 尝试更简短的关键词', style: _buildHintTextStyle()),
+                  Text('· ${S.current.checkSpellingHint}', style: _buildHintTextStyle()),
+                  Text('· ${S.current.trySynonymsHint}', style: _buildHintTextStyle()),
+                  Text('· ${S.current.tryShorterKeywordsHint}', style: _buildHintTextStyle()),
                 ],
               ),
             ],
@@ -491,11 +506,11 @@ class _WordsPageState extends ConsumerState<WordsPage> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.grey),
             const SizedBox(height: DesignTokens.spacingMedium),
-            Text('加载失败: '),
+            Text(S.current.loadFailedText),
             const SizedBox(height: DesignTokens.spacingMedium),
             ElevatedButton(
               onPressed: () => setState(() {}),
-              child: const Text('重试'),
+              child: Text(S.current.retryButton),
             ),
           ],
         ),
@@ -565,12 +580,12 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('清除搜索历史'),
-        content: const Text('确定要清除所有搜索历史吗？'),
+        title: Text(S.current.clearSearchHistoryTitle),
+        content: Text(S.current.clearSearchHistoryMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -595,14 +610,14 @@ class _WordsPageState extends ConsumerState<WordsPage> {
         _searchHistory = [];
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('搜索历史已清空')),
+        SnackBar(content: Text(S.current.searchHistoryCleared)),
       );
     } catch (e) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('清除失败: `$e')),
+        SnackBar(content: Text(S.current.clearFailed(e.toString()))),
       );
     }
   }

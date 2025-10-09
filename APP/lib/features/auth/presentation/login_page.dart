@@ -6,8 +6,10 @@ import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/locale_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_button.dart';
+import '../../../l10n/generated/l10n_simple.dart';
 
 /// 登录页面
 class LoginPage extends ConsumerStatefulWidget {
@@ -35,6 +37,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
+    // 监听 locale 变化以确保页面在语言切换时重建
+    ref.watch(localeNotifierProvider);
+
     // 监听认证状态变化，用于自动跳转或提示错误
     ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (previous, next) {
       next.whenOrNull(
@@ -58,7 +63,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
-          tooltip: '返回',
+          tooltip: S.current.backTooltip,
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -67,7 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             }
           },
         ),
-        title: const Text('登录'),
+        title: Text(S.current.login),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -94,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: DesignTokens.spacingSmall),
                 Text(
-                  '登录您的账户',
+                  S.current.loginToYourAccount,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -103,8 +108,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: DesignTokens.spacingXXLarge),
                 CustomTextField(
                   controller: _emailController,
-                  labelText: '邮箱',
-                  hintText: '请输入邮箱地址',
+                  labelText: S.current.email,
+                  hintText: S.current.emailAddressHint,
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -113,8 +118,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: DesignTokens.spacingLarge),
                 CustomTextField(
                   controller: _passwordController,
-                  labelText: '密码',
-                  hintText: '请输入密码',
+                  labelText: S.current.password,
+                  hintText: S.current.passwordHint,
                   prefixIcon: Icons.lock_outlined,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
@@ -138,11 +143,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onChanged: (value) =>
                           setState(() => _rememberMe = value ?? false),
                     ),
-                    const Text('记住我'),
+                    Text(S.current.rememberMeOption),
                     const Spacer(),
                     TextButton(
                       onPressed: () => context.push(RoutePaths.forgotPassword),
-                      child: const Text('忘记密码？'),
+                      child: Text(S.current.forgotPasswordLink),
                     ),
                   ],
                 ),
@@ -150,16 +155,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 LoadingButton(
                   onPressed: _handleLogin,
                   isLoading: authState.isLoading,
-                  child: const Text('登录'),
+                  child: Text(S.current.login),
                 ),
                 const SizedBox(height: DesignTokens.spacingLarge),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('还没有账户？'),
+                    Text(S.current.alreadyHaveAccount),
                     TextButton(
                       onPressed: () => context.push(RoutePaths.register),
-                      child: const Text('立即注册'),
+                      child: Text(S.current.registerNowLink),
                     ),
                   ],
                 ),
@@ -187,12 +192,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入邮箱地址';
+      return S.current.pleaseEnterEmailAddress;
     }
 
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
     if (!emailRegex.hasMatch(value)) {
-      return '请输入有效的邮箱地址';
+      return S.current.pleaseEnterValidEmail;
     }
 
     return null;
@@ -200,11 +205,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return '请输入密码';
+      return S.current.pleaseEnterPassword;
     }
 
     if (value.length < 6) {
-      return '密码长度不能少于6位';
+      return S.current.passwordMinLengthValidation;
     }
 
     return null;

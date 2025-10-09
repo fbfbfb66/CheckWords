@@ -306,7 +306,7 @@ class _WordByNameProviderElement
   String get word => (origin as WordByNameProvider).word;
 }
 
-String _$searchWordsHash() => r'666e673939d20eea1d00c58fd4226e7c47181e2d';
+String _$searchWordsHash() => r'2985758d5723def3970bde58e2fa37d99fa30181';
 
 /// 搜索单词
 ///
