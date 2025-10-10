@@ -99,7 +99,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
       return favoriteWordsAsync.when(
         data: (words) => words
             .where((word) =>
-                word.word.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                word.headWord.toLowerCase().contains(_searchQuery.toLowerCase()) ||
                 word.primaryMeaning
                     .toLowerCase()
                     .contains(_searchQuery.toLowerCase()))
@@ -299,7 +299,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
             data: (words) {
               final searchWords = words
                   .where((word) =>
-                      word.word
+                      word.headWord
                           .toLowerCase()
                           .contains(_searchQuery.toLowerCase()) ||
                       word.primaryMeaning
@@ -509,15 +509,15 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
         title: Row(
           children: [
             Text(
-              word.word,
+              word.headWord,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
             ),
-            if (word.usIpa != null && word.usIpa!.isNotEmpty) ...[
+            if (word.usPhone != null && word.usPhone!.isNotEmpty) ...[
               const SizedBox(width: DesignTokens.spacingSmall),
               Text(
-                word.usIpa!,
+                word.usPhone!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontFamily: 'Inter', // 强制使用Inter字体显示音标
@@ -665,8 +665,8 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(newFavoriteState
-                ? S.current.wordAddedToCollection(word.word)
-                : S.current.wordRemovedFromCollection(word.word)),
+                ? S.current.wordAddedToCollection(word.headWord)
+                : S.current.wordRemovedFromCollection(word.headWord)),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
@@ -709,7 +709,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(S.current.confirmRemoveWord),
-        content: Text(S.current.confirmRemoveWordMessage(word.word)),
+        content: Text(S.current.confirmRemoveWordMessage(word.headWord)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

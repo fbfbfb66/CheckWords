@@ -89,25 +89,25 @@ class DebugHelper {
       if (count > 0) {
         // 查找以字母开头的单词（简单方式）
         final englishWords = await database.customSelect(
-          "SELECT word FROM words_table WHERE word >= 'a' AND word < 'z' AND LENGTH(word) > 1 ORDER BY word LIMIT 5",
+          "SELECT head_word FROM words_table WHERE head_word >= 'a' AND head_word < 'z' AND LENGTH(head_word) > 1 ORDER BY head_word LIMIT 5",
         ).get();
-        
+
         if (englishWords.isNotEmpty) {
-          results['samples'] = englishWords.map((r) => r.data['word']).join(', ');
+          results['samples'] = englishWords.map((r) => r.data['head_word']).join(', ');
         } else {
           // 尝试查找任何包含字母的单词
           final anyWords = await database.customSelect(
-            "SELECT word FROM words_table WHERE word LIKE '%a%' OR word LIKE '%e%' OR word LIKE '%i%' ORDER BY word LIMIT 5",
+            "SELECT head_word FROM words_table WHERE head_word LIKE '%a%' OR head_word LIKE '%e%' OR head_word LIKE '%i%' ORDER BY head_word LIMIT 5",
           ).get();
-          
+
           if (anyWords.isNotEmpty) {
-            results['samples'] = anyWords.map((r) => r.data['word']).join(', ');
+            results['samples'] = anyWords.map((r) => r.data['head_word']).join(', ');
           } else {
             // 如果都没有，显示前几个单词
             final samples = await database.customSelect(
-              'SELECT word FROM words_table ORDER BY word LIMIT 5',
+              'SELECT head_word FROM words_table ORDER BY head_word LIMIT 5',
             ).get();
-            results['samples'] = samples.map((r) => r.data['word']).join(', ');
+            results['samples'] = samples.map((r) => r.data['head_word']).join(', ');
             results['warning'] = '⚠️ 数据质量问题：多为数字/符号';
           }
         }
@@ -118,7 +118,7 @@ class DebugHelper {
         
         for (final word in commonWords) {
           final found = await database.customSelect(
-            'SELECT word FROM words_table WHERE word = ? LIMIT 1',
+            'SELECT head_word FROM words_table WHERE head_word = ? LIMIT 1',
             variables: [drift.Variable.withString(word)],
           ).get();
           if (found.isNotEmpty) {
@@ -277,27 +277,49 @@ class DebugHelper {
       // 重新创建FTS5表
       await database.customStatement('''
         CREATE VIRTUAL TABLE words_fts USING fts5(
-          word,
-          lemma,
+          head_word,
+          word_id,
           search_content
         );
       ''');
-      
+
+      // 重新创建触发器保持FTS表同步
+      await database.customStatement('''
+        CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+          INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+          VALUES (new.id, new.head_word, new.word_id, new.search_content);
+        END;
+      ''');
+
+      await database.customStatement('''
+        CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+          DELETE FROM words_fts WHERE rowid = old.id;
+        END;
+      ''');
+
+      await database.customStatement('''
+        CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+          DELETE FROM words_fts WHERE rowid = old.id;
+          INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+          VALUES (new.id, new.head_word, new.word_id, new.search_content);
+        END;
+      ''');
+
       // 同步数据到FTS5表
       await database.customStatement('''
-        INSERT INTO words_fts(rowid, word, lemma, search_content)
-        SELECT id, word, lemma, content FROM words_table
+        INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+        SELECT id, head_word, word_id, search_content FROM words_table
       ''');
-      
+
       // 测试FTS5搜索是否工作
       final testResult = await database.customSelect(
         '''
-        SELECT w.word FROM words_table w
+        SELECT w.head_word FROM words_table w
         INNER JOIN words_fts fts ON w.id = fts.rowid
-        WHERE words_fts MATCH ? 
+        WHERE words_fts MATCH ?
         LIMIT 1
         ''',
-        variables: [drift.Variable.withString('and')],
+        variables: [drift.Variable.withString('hello')],
       ).get();
 
       Navigator.pop(context); // 关闭进度对话框
@@ -313,7 +335,7 @@ class DebugHelper {
             children: [
               const Text('✅ 已重建FTS5全文搜索索引'),
               const Text('🚀 已同步所有单词数据'),
-              Text('🧪 测试FTS5搜索"and": ${testResult.isNotEmpty ? '✅ 成功' : '❌ 失败'}'),
+              Text('🧪 测试FTS5搜索"hello": ${testResult.isNotEmpty ? '✅ 成功' : '❌ 失败'}'),
               const SizedBox(height: 16),
               const Text('搜索功能已修复，现在应该能正常工作了！', 
                 style: TextStyle(fontWeight: FontWeight.bold)),

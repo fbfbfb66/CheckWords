@@ -155,17 +155,17 @@ class _LearningPageState extends ConsumerState<LearningPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      word.word,
+                      word.headWord,
                       style: theme.textTheme.displaySmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (word.usIpa != null && word.usIpa!.isNotEmpty) ...[
+                    if (word.usPhone != null && word.usPhone!.isNotEmpty) ...[
                       const SizedBox(height: DesignTokens.spacingSmall),
                       Text(
-                        'US · ${word.usIpa}',
+                        'US · ${word.usPhone}',
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

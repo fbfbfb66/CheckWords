@@ -48,6 +48,12 @@ dependencies:
   # 鍔犲瘑
   crypto: ^3.0.3
 
+  # SQLite数据库
+  sqflite: ^2.3.0
+
+  # 音频播放
+  audioplayers: ^6.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

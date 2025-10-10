@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'shared/providers/locale_provider.dart';
+import 'shared/providers/words_provider.dart';
 import 'core/database/app_database.dart';
 import 'core/services/data_import_service.dart';
 import 'l10n/generated/l10n_simple.dart';
@@ -17,6 +18,29 @@ Future<void> main() async {
 
   try {
     await DataImportService.importWordsData(database);
+
+    // 数据导入完成后检查状态
+    print('🔍 开始检查数据库状态...');
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(database)],
+    );
+
+    // 延迟检查，确保导入完成
+    Timer(const Duration(seconds: 2), () async {
+      try {
+        final status = await container.read(databaseStatusProvider.future);
+        if (status.totalWords > 0) {
+          print('✅ 数据导入成功！');
+          print('   总单词数: ${status.totalWords}');
+          print('   有音标的单词数: ${status.wordsWithPronunciation}');
+        } else {
+          print('❌ 数据导入失败，单词数为0');
+        }
+      } catch (e) {
+        print('❌ 检查数据库状态失败: $e');
+      }
+    });
+
   } catch (e) {
     print('词汇数据导入失败: $e');
   }

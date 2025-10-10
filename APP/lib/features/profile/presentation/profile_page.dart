@@ -285,7 +285,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 children: words.take(3).map((word) {
                                   return Chip(
                                     label: Text(
-                                      word.word,
+                                      word.headWord,
                                       style: Theme.of(context).textTheme.bodySmall,
                                     ),
                                     visualDensity: VisualDensity.compact,

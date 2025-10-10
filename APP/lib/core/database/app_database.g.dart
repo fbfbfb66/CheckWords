@@ -18,43 +18,59 @@ class $WordsTableTable extends WordsTable
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _wordMeta = const VerificationMeta('word');
+  static const VerificationMeta _wordIdMeta = const VerificationMeta('wordId');
   @override
-  late final GeneratedColumn<String> word = GeneratedColumn<String>(
-      'word', aliasedName, false,
+  late final GeneratedColumn<String> wordId = GeneratedColumn<String>(
+      'word_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _bookIdMeta = const VerificationMeta('bookId');
+  @override
+  late final GeneratedColumn<String> bookId = GeneratedColumn<String>(
+      'book_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _wordRankMeta =
+      const VerificationMeta('wordRank');
+  @override
+  late final GeneratedColumn<int> wordRank = GeneratedColumn<int>(
+      'word_rank', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _headWordMeta =
+      const VerificationMeta('headWord');
+  @override
+  late final GeneratedColumn<String> headWord = GeneratedColumn<String>(
+      'head_word', aliasedName, false,
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 50),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
-  static const VerificationMeta _lemmaMeta = const VerificationMeta('lemma');
+  static const VerificationMeta _usphoneMeta =
+      const VerificationMeta('usphone');
   @override
-  late final GeneratedColumn<String> lemma = GeneratedColumn<String>(
-      'lemma', aliasedName, true,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 50),
-      type: DriftSqlType.string,
-      requiredDuringInsert: false);
-  static const VerificationMeta _partsOfSpeechMeta =
-      const VerificationMeta('partsOfSpeech');
+  late final GeneratedColumn<String> usphone = GeneratedColumn<String>(
+      'usphone', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _ukphoneMeta =
+      const VerificationMeta('ukphone');
   @override
-  late final GeneratedColumn<String> partsOfSpeech = GeneratedColumn<String>(
-      'parts_of_speech', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('[]'));
-  static const VerificationMeta _posMeaningsMeta =
-      const VerificationMeta('posMeanings');
+  late final GeneratedColumn<String> ukphone = GeneratedColumn<String>(
+      'ukphone', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _usspeechMeta =
+      const VerificationMeta('usspeech');
   @override
-  late final GeneratedColumn<String> posMeanings = GeneratedColumn<String>(
-      'pos_meanings', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('[]'));
-  static const VerificationMeta _phrasesMeta =
-      const VerificationMeta('phrases');
+  late final GeneratedColumn<String> usspeech = GeneratedColumn<String>(
+      'usspeech', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _ukspeechMeta =
+      const VerificationMeta('ukspeech');
   @override
-  late final GeneratedColumn<String> phrases = GeneratedColumn<String>(
-      'phrases', aliasedName, false,
+  late final GeneratedColumn<String> ukspeech = GeneratedColumn<String>(
+      'ukspeech', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _transMeta = const VerificationMeta('trans');
+  @override
+  late final GeneratedColumn<String> trans = GeneratedColumn<String>(
+      'trans', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('[]'));
@@ -66,31 +82,11 @@ class $WordsTableTable extends WordsTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('[]'));
-  static const VerificationMeta _pronunciationMeta =
-      const VerificationMeta('pronunciation');
+  static const VerificationMeta _phrasesMeta =
+      const VerificationMeta('phrases');
   @override
-  late final GeneratedColumn<String> pronunciation = GeneratedColumn<String>(
-      'pronunciation', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('{}'));
-  static const VerificationMeta _levelMeta = const VerificationMeta('level');
-  @override
-  late final GeneratedColumn<String> level = GeneratedColumn<String>(
-      'level', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _frequencyMeta =
-      const VerificationMeta('frequency');
-  @override
-  late final GeneratedColumn<int> frequency = GeneratedColumn<int>(
-      'frequency', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
-  @override
-  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
-      'tags', aliasedName, false,
+  late final GeneratedColumn<String> phrases = GeneratedColumn<String>(
+      'phrases', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('[]'));
@@ -102,19 +98,26 @@ class $WordsTableTable extends WordsTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('[]'));
-  static const VerificationMeta _antonymsMeta =
-      const VerificationMeta('antonyms');
+  static const VerificationMeta _relWordsMeta =
+      const VerificationMeta('relWords');
   @override
-  late final GeneratedColumn<String> antonyms = GeneratedColumn<String>(
-      'antonyms', aliasedName, false,
+  late final GeneratedColumn<String> relWords = GeneratedColumn<String>(
+      'rel_words', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('[]'));
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+  static const VerificationMeta _examsMeta = const VerificationMeta('exams');
   @override
-  late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, false,
+  late final GeneratedColumn<String> exams = GeneratedColumn<String>(
+      'exams', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _searchContentMeta =
+      const VerificationMeta('searchContent');
+  @override
+  late final GeneratedColumn<String> searchContent = GeneratedColumn<String>(
+      'search_content', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant(''));
@@ -137,19 +140,21 @@ class $WordsTableTable extends WordsTable
   @override
   List<GeneratedColumn> get $columns => [
         id,
-        word,
-        lemma,
-        partsOfSpeech,
-        posMeanings,
-        phrases,
+        wordId,
+        bookId,
+        wordRank,
+        headWord,
+        usphone,
+        ukphone,
+        usspeech,
+        ukspeech,
+        trans,
         sentences,
-        pronunciation,
-        level,
-        frequency,
-        tags,
+        phrases,
         synonyms,
-        antonyms,
-        content,
+        relWords,
+        exams,
+        searchContent,
         createdAt,
         updatedAt
       ];
@@ -166,65 +171,75 @@ class $WordsTableTable extends WordsTable
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('word')) {
-      context.handle(
-          _wordMeta, word.isAcceptableOrUnknown(data['word']!, _wordMeta));
+    if (data.containsKey('word_id')) {
+      context.handle(_wordIdMeta,
+          wordId.isAcceptableOrUnknown(data['word_id']!, _wordIdMeta));
     } else if (isInserting) {
-      context.missing(_wordMeta);
+      context.missing(_wordIdMeta);
     }
-    if (data.containsKey('lemma')) {
+    if (data.containsKey('book_id')) {
+      context.handle(_bookIdMeta,
+          bookId.isAcceptableOrUnknown(data['book_id']!, _bookIdMeta));
+    } else if (isInserting) {
+      context.missing(_bookIdMeta);
+    }
+    if (data.containsKey('word_rank')) {
+      context.handle(_wordRankMeta,
+          wordRank.isAcceptableOrUnknown(data['word_rank']!, _wordRankMeta));
+    } else if (isInserting) {
+      context.missing(_wordRankMeta);
+    }
+    if (data.containsKey('head_word')) {
+      context.handle(_headWordMeta,
+          headWord.isAcceptableOrUnknown(data['head_word']!, _headWordMeta));
+    } else if (isInserting) {
+      context.missing(_headWordMeta);
+    }
+    if (data.containsKey('usphone')) {
+      context.handle(_usphoneMeta,
+          usphone.isAcceptableOrUnknown(data['usphone']!, _usphoneMeta));
+    }
+    if (data.containsKey('ukphone')) {
+      context.handle(_ukphoneMeta,
+          ukphone.isAcceptableOrUnknown(data['ukphone']!, _ukphoneMeta));
+    }
+    if (data.containsKey('usspeech')) {
+      context.handle(_usspeechMeta,
+          usspeech.isAcceptableOrUnknown(data['usspeech']!, _usspeechMeta));
+    }
+    if (data.containsKey('ukspeech')) {
+      context.handle(_ukspeechMeta,
+          ukspeech.isAcceptableOrUnknown(data['ukspeech']!, _ukspeechMeta));
+    }
+    if (data.containsKey('trans')) {
       context.handle(
-          _lemmaMeta, lemma.isAcceptableOrUnknown(data['lemma']!, _lemmaMeta));
-    }
-    if (data.containsKey('parts_of_speech')) {
-      context.handle(
-          _partsOfSpeechMeta,
-          partsOfSpeech.isAcceptableOrUnknown(
-              data['parts_of_speech']!, _partsOfSpeechMeta));
-    }
-    if (data.containsKey('pos_meanings')) {
-      context.handle(
-          _posMeaningsMeta,
-          posMeanings.isAcceptableOrUnknown(
-              data['pos_meanings']!, _posMeaningsMeta));
-    }
-    if (data.containsKey('phrases')) {
-      context.handle(_phrasesMeta,
-          phrases.isAcceptableOrUnknown(data['phrases']!, _phrasesMeta));
+          _transMeta, trans.isAcceptableOrUnknown(data['trans']!, _transMeta));
     }
     if (data.containsKey('sentences')) {
       context.handle(_sentencesMeta,
           sentences.isAcceptableOrUnknown(data['sentences']!, _sentencesMeta));
     }
-    if (data.containsKey('pronunciation')) {
-      context.handle(
-          _pronunciationMeta,
-          pronunciation.isAcceptableOrUnknown(
-              data['pronunciation']!, _pronunciationMeta));
-    }
-    if (data.containsKey('level')) {
-      context.handle(
-          _levelMeta, level.isAcceptableOrUnknown(data['level']!, _levelMeta));
-    }
-    if (data.containsKey('frequency')) {
-      context.handle(_frequencyMeta,
-          frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta));
-    }
-    if (data.containsKey('tags')) {
-      context.handle(
-          _tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
+    if (data.containsKey('phrases')) {
+      context.handle(_phrasesMeta,
+          phrases.isAcceptableOrUnknown(data['phrases']!, _phrasesMeta));
     }
     if (data.containsKey('synonyms')) {
       context.handle(_synonymsMeta,
           synonyms.isAcceptableOrUnknown(data['synonyms']!, _synonymsMeta));
     }
-    if (data.containsKey('antonyms')) {
-      context.handle(_antonymsMeta,
-          antonyms.isAcceptableOrUnknown(data['antonyms']!, _antonymsMeta));
+    if (data.containsKey('rel_words')) {
+      context.handle(_relWordsMeta,
+          relWords.isAcceptableOrUnknown(data['rel_words']!, _relWordsMeta));
     }
-    if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+    if (data.containsKey('exams')) {
+      context.handle(
+          _examsMeta, exams.isAcceptableOrUnknown(data['exams']!, _examsMeta));
+    }
+    if (data.containsKey('search_content')) {
+      context.handle(
+          _searchContentMeta,
+          searchContent.isAcceptableOrUnknown(
+              data['search_content']!, _searchContentMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -241,7 +256,7 @@ class $WordsTableTable extends WordsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-        {word},
+        {wordId},
       ];
   @override
   WordsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
@@ -249,32 +264,36 @@ class $WordsTableTable extends WordsTable
     return WordsTableData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      word: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}word'])!,
-      lemma: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}lemma']),
-      partsOfSpeech: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}parts_of_speech'])!,
-      posMeanings: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}pos_meanings'])!,
-      phrases: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}phrases'])!,
+      wordId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}word_id'])!,
+      bookId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}book_id'])!,
+      wordRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}word_rank'])!,
+      headWord: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}head_word'])!,
+      usphone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}usphone']),
+      ukphone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ukphone']),
+      usspeech: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}usspeech']),
+      ukspeech: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ukspeech']),
+      trans: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}trans'])!,
       sentences: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sentences'])!,
-      pronunciation: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}pronunciation'])!,
-      level: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}level']),
-      frequency: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}frequency'])!,
-      tags: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
+      phrases: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phrases'])!,
       synonyms: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}synonyms'])!,
-      antonyms: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}antonyms'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      relWords: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rel_words'])!,
+      exams: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}exams'])!,
+      searchContent: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}search_content'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -292,44 +311,50 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   /// 主键ID
   final int id;
 
-  /// 单词本身
-  final String word;
+  /// 单词唯一标识符 (content.word.wordId)
+  final String wordId;
 
-  /// 词干/原形
-  final String? lemma;
+  /// 单词书ID (用于分类)
+  final String bookId;
 
-  /// 词性列表 (JSON: ["noun", "verb"])
-  final String partsOfSpeech;
+  /// 单词序号 (wordRank)
+  final int wordRank;
 
-  /// 词性含义 (JSON格式)
-  final String posMeanings;
+  /// 单词本身 (headWord/content.word.wordHead)
+  final String headWord;
 
-  /// 例句短语 (JSON格式)
-  final String phrases;
+  /// 美式音标
+  final String? usphone;
 
-  /// 例句 (JSON格式)
+  /// 英式音标
+  final String? ukphone;
+
+  /// 美式发音参数
+  final String? usspeech;
+
+  /// 英式发音参数
+  final String? ukspeech;
+
+  /// 释义信息 (JSON格式, content.word.content.trans)
+  final String trans;
+
+  /// 例句 (JSON格式, content.word.content.sentence.sentences)
   final String sentences;
 
-  /// 音标和音频 (JSON格式)
-  final String pronunciation;
+  /// 短语 (JSON格式, content.word.content.phrase.phrases)
+  final String phrases;
 
-  /// CEFR等级 (A1, A2, B1, B2, C1, C2)
-  final String? level;
-
-  /// 词频 (用于排序)
-  final int frequency;
-
-  /// 标签 (JSON数组: ["academic", "business"])
-  final String tags;
-
-  /// 同义词 (JSON数组)
+  /// 同近义词 (JSON格式, content.word.content.syno.synos)
   final String synonyms;
 
-  /// 反义词 (JSON数组)
-  final String antonyms;
+  /// 同根词 (JSON格式, content.word.content.relWord.rels)
+  final String relWords;
 
-  /// 搜索用的文本内容 (包含单词、含义、例句等)
-  final String content;
+  /// 考试题目 (JSON格式, content.word.content.exam)
+  final String exams;
+
+  /// 搜索用的文本内容 (包含单词、释义、例句等)
+  final String searchContent;
 
   /// 创建时间
   final DateTime createdAt;
@@ -338,42 +363,50 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   final DateTime updatedAt;
   const WordsTableData(
       {required this.id,
-      required this.word,
-      this.lemma,
-      required this.partsOfSpeech,
-      required this.posMeanings,
-      required this.phrases,
+      required this.wordId,
+      required this.bookId,
+      required this.wordRank,
+      required this.headWord,
+      this.usphone,
+      this.ukphone,
+      this.usspeech,
+      this.ukspeech,
+      required this.trans,
       required this.sentences,
-      required this.pronunciation,
-      this.level,
-      required this.frequency,
-      required this.tags,
+      required this.phrases,
       required this.synonyms,
-      required this.antonyms,
-      required this.content,
+      required this.relWords,
+      required this.exams,
+      required this.searchContent,
       required this.createdAt,
       required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['word'] = Variable<String>(word);
-    if (!nullToAbsent || lemma != null) {
-      map['lemma'] = Variable<String>(lemma);
+    map['word_id'] = Variable<String>(wordId);
+    map['book_id'] = Variable<String>(bookId);
+    map['word_rank'] = Variable<int>(wordRank);
+    map['head_word'] = Variable<String>(headWord);
+    if (!nullToAbsent || usphone != null) {
+      map['usphone'] = Variable<String>(usphone);
     }
-    map['parts_of_speech'] = Variable<String>(partsOfSpeech);
-    map['pos_meanings'] = Variable<String>(posMeanings);
-    map['phrases'] = Variable<String>(phrases);
+    if (!nullToAbsent || ukphone != null) {
+      map['ukphone'] = Variable<String>(ukphone);
+    }
+    if (!nullToAbsent || usspeech != null) {
+      map['usspeech'] = Variable<String>(usspeech);
+    }
+    if (!nullToAbsent || ukspeech != null) {
+      map['ukspeech'] = Variable<String>(ukspeech);
+    }
+    map['trans'] = Variable<String>(trans);
     map['sentences'] = Variable<String>(sentences);
-    map['pronunciation'] = Variable<String>(pronunciation);
-    if (!nullToAbsent || level != null) {
-      map['level'] = Variable<String>(level);
-    }
-    map['frequency'] = Variable<int>(frequency);
-    map['tags'] = Variable<String>(tags);
+    map['phrases'] = Variable<String>(phrases);
     map['synonyms'] = Variable<String>(synonyms);
-    map['antonyms'] = Variable<String>(antonyms);
-    map['content'] = Variable<String>(content);
+    map['rel_words'] = Variable<String>(relWords);
+    map['exams'] = Variable<String>(exams);
+    map['search_content'] = Variable<String>(searchContent);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -382,21 +415,29 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   WordsTableCompanion toCompanion(bool nullToAbsent) {
     return WordsTableCompanion(
       id: Value(id),
-      word: Value(word),
-      lemma:
-          lemma == null && nullToAbsent ? const Value.absent() : Value(lemma),
-      partsOfSpeech: Value(partsOfSpeech),
-      posMeanings: Value(posMeanings),
-      phrases: Value(phrases),
+      wordId: Value(wordId),
+      bookId: Value(bookId),
+      wordRank: Value(wordRank),
+      headWord: Value(headWord),
+      usphone: usphone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(usphone),
+      ukphone: ukphone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ukphone),
+      usspeech: usspeech == null && nullToAbsent
+          ? const Value.absent()
+          : Value(usspeech),
+      ukspeech: ukspeech == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ukspeech),
+      trans: Value(trans),
       sentences: Value(sentences),
-      pronunciation: Value(pronunciation),
-      level:
-          level == null && nullToAbsent ? const Value.absent() : Value(level),
-      frequency: Value(frequency),
-      tags: Value(tags),
+      phrases: Value(phrases),
       synonyms: Value(synonyms),
-      antonyms: Value(antonyms),
-      content: Value(content),
+      relWords: Value(relWords),
+      exams: Value(exams),
+      searchContent: Value(searchContent),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -407,19 +448,21 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return WordsTableData(
       id: serializer.fromJson<int>(json['id']),
-      word: serializer.fromJson<String>(json['word']),
-      lemma: serializer.fromJson<String?>(json['lemma']),
-      partsOfSpeech: serializer.fromJson<String>(json['partsOfSpeech']),
-      posMeanings: serializer.fromJson<String>(json['posMeanings']),
-      phrases: serializer.fromJson<String>(json['phrases']),
+      wordId: serializer.fromJson<String>(json['wordId']),
+      bookId: serializer.fromJson<String>(json['bookId']),
+      wordRank: serializer.fromJson<int>(json['wordRank']),
+      headWord: serializer.fromJson<String>(json['headWord']),
+      usphone: serializer.fromJson<String?>(json['usphone']),
+      ukphone: serializer.fromJson<String?>(json['ukphone']),
+      usspeech: serializer.fromJson<String?>(json['usspeech']),
+      ukspeech: serializer.fromJson<String?>(json['ukspeech']),
+      trans: serializer.fromJson<String>(json['trans']),
       sentences: serializer.fromJson<String>(json['sentences']),
-      pronunciation: serializer.fromJson<String>(json['pronunciation']),
-      level: serializer.fromJson<String?>(json['level']),
-      frequency: serializer.fromJson<int>(json['frequency']),
-      tags: serializer.fromJson<String>(json['tags']),
+      phrases: serializer.fromJson<String>(json['phrases']),
       synonyms: serializer.fromJson<String>(json['synonyms']),
-      antonyms: serializer.fromJson<String>(json['antonyms']),
-      content: serializer.fromJson<String>(json['content']),
+      relWords: serializer.fromJson<String>(json['relWords']),
+      exams: serializer.fromJson<String>(json['exams']),
+      searchContent: serializer.fromJson<String>(json['searchContent']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -429,19 +472,21 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'word': serializer.toJson<String>(word),
-      'lemma': serializer.toJson<String?>(lemma),
-      'partsOfSpeech': serializer.toJson<String>(partsOfSpeech),
-      'posMeanings': serializer.toJson<String>(posMeanings),
-      'phrases': serializer.toJson<String>(phrases),
+      'wordId': serializer.toJson<String>(wordId),
+      'bookId': serializer.toJson<String>(bookId),
+      'wordRank': serializer.toJson<int>(wordRank),
+      'headWord': serializer.toJson<String>(headWord),
+      'usphone': serializer.toJson<String?>(usphone),
+      'ukphone': serializer.toJson<String?>(ukphone),
+      'usspeech': serializer.toJson<String?>(usspeech),
+      'ukspeech': serializer.toJson<String?>(ukspeech),
+      'trans': serializer.toJson<String>(trans),
       'sentences': serializer.toJson<String>(sentences),
-      'pronunciation': serializer.toJson<String>(pronunciation),
-      'level': serializer.toJson<String?>(level),
-      'frequency': serializer.toJson<int>(frequency),
-      'tags': serializer.toJson<String>(tags),
+      'phrases': serializer.toJson<String>(phrases),
       'synonyms': serializer.toJson<String>(synonyms),
-      'antonyms': serializer.toJson<String>(antonyms),
-      'content': serializer.toJson<String>(content),
+      'relWords': serializer.toJson<String>(relWords),
+      'exams': serializer.toJson<String>(exams),
+      'searchContent': serializer.toJson<String>(searchContent),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -449,60 +494,63 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
 
   WordsTableData copyWith(
           {int? id,
-          String? word,
-          Value<String?> lemma = const Value.absent(),
-          String? partsOfSpeech,
-          String? posMeanings,
-          String? phrases,
+          String? wordId,
+          String? bookId,
+          int? wordRank,
+          String? headWord,
+          Value<String?> usphone = const Value.absent(),
+          Value<String?> ukphone = const Value.absent(),
+          Value<String?> usspeech = const Value.absent(),
+          Value<String?> ukspeech = const Value.absent(),
+          String? trans,
           String? sentences,
-          String? pronunciation,
-          Value<String?> level = const Value.absent(),
-          int? frequency,
-          String? tags,
+          String? phrases,
           String? synonyms,
-          String? antonyms,
-          String? content,
+          String? relWords,
+          String? exams,
+          String? searchContent,
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       WordsTableData(
         id: id ?? this.id,
-        word: word ?? this.word,
-        lemma: lemma.present ? lemma.value : this.lemma,
-        partsOfSpeech: partsOfSpeech ?? this.partsOfSpeech,
-        posMeanings: posMeanings ?? this.posMeanings,
-        phrases: phrases ?? this.phrases,
+        wordId: wordId ?? this.wordId,
+        bookId: bookId ?? this.bookId,
+        wordRank: wordRank ?? this.wordRank,
+        headWord: headWord ?? this.headWord,
+        usphone: usphone.present ? usphone.value : this.usphone,
+        ukphone: ukphone.present ? ukphone.value : this.ukphone,
+        usspeech: usspeech.present ? usspeech.value : this.usspeech,
+        ukspeech: ukspeech.present ? ukspeech.value : this.ukspeech,
+        trans: trans ?? this.trans,
         sentences: sentences ?? this.sentences,
-        pronunciation: pronunciation ?? this.pronunciation,
-        level: level.present ? level.value : this.level,
-        frequency: frequency ?? this.frequency,
-        tags: tags ?? this.tags,
+        phrases: phrases ?? this.phrases,
         synonyms: synonyms ?? this.synonyms,
-        antonyms: antonyms ?? this.antonyms,
-        content: content ?? this.content,
+        relWords: relWords ?? this.relWords,
+        exams: exams ?? this.exams,
+        searchContent: searchContent ?? this.searchContent,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
   WordsTableData copyWithCompanion(WordsTableCompanion data) {
     return WordsTableData(
       id: data.id.present ? data.id.value : this.id,
-      word: data.word.present ? data.word.value : this.word,
-      lemma: data.lemma.present ? data.lemma.value : this.lemma,
-      partsOfSpeech: data.partsOfSpeech.present
-          ? data.partsOfSpeech.value
-          : this.partsOfSpeech,
-      posMeanings:
-          data.posMeanings.present ? data.posMeanings.value : this.posMeanings,
-      phrases: data.phrases.present ? data.phrases.value : this.phrases,
+      wordId: data.wordId.present ? data.wordId.value : this.wordId,
+      bookId: data.bookId.present ? data.bookId.value : this.bookId,
+      wordRank: data.wordRank.present ? data.wordRank.value : this.wordRank,
+      headWord: data.headWord.present ? data.headWord.value : this.headWord,
+      usphone: data.usphone.present ? data.usphone.value : this.usphone,
+      ukphone: data.ukphone.present ? data.ukphone.value : this.ukphone,
+      usspeech: data.usspeech.present ? data.usspeech.value : this.usspeech,
+      ukspeech: data.ukspeech.present ? data.ukspeech.value : this.ukspeech,
+      trans: data.trans.present ? data.trans.value : this.trans,
       sentences: data.sentences.present ? data.sentences.value : this.sentences,
-      pronunciation: data.pronunciation.present
-          ? data.pronunciation.value
-          : this.pronunciation,
-      level: data.level.present ? data.level.value : this.level,
-      frequency: data.frequency.present ? data.frequency.value : this.frequency,
-      tags: data.tags.present ? data.tags.value : this.tags,
+      phrases: data.phrases.present ? data.phrases.value : this.phrases,
       synonyms: data.synonyms.present ? data.synonyms.value : this.synonyms,
-      antonyms: data.antonyms.present ? data.antonyms.value : this.antonyms,
-      content: data.content.present ? data.content.value : this.content,
+      relWords: data.relWords.present ? data.relWords.value : this.relWords,
+      exams: data.exams.present ? data.exams.value : this.exams,
+      searchContent: data.searchContent.present
+          ? data.searchContent.value
+          : this.searchContent,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -512,19 +560,21 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   String toString() {
     return (StringBuffer('WordsTableData(')
           ..write('id: $id, ')
-          ..write('word: $word, ')
-          ..write('lemma: $lemma, ')
-          ..write('partsOfSpeech: $partsOfSpeech, ')
-          ..write('posMeanings: $posMeanings, ')
-          ..write('phrases: $phrases, ')
+          ..write('wordId: $wordId, ')
+          ..write('bookId: $bookId, ')
+          ..write('wordRank: $wordRank, ')
+          ..write('headWord: $headWord, ')
+          ..write('usphone: $usphone, ')
+          ..write('ukphone: $ukphone, ')
+          ..write('usspeech: $usspeech, ')
+          ..write('ukspeech: $ukspeech, ')
+          ..write('trans: $trans, ')
           ..write('sentences: $sentences, ')
-          ..write('pronunciation: $pronunciation, ')
-          ..write('level: $level, ')
-          ..write('frequency: $frequency, ')
-          ..write('tags: $tags, ')
+          ..write('phrases: $phrases, ')
           ..write('synonyms: $synonyms, ')
-          ..write('antonyms: $antonyms, ')
-          ..write('content: $content, ')
+          ..write('relWords: $relWords, ')
+          ..write('exams: $exams, ')
+          ..write('searchContent: $searchContent, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -534,19 +584,21 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   @override
   int get hashCode => Object.hash(
       id,
-      word,
-      lemma,
-      partsOfSpeech,
-      posMeanings,
-      phrases,
+      wordId,
+      bookId,
+      wordRank,
+      headWord,
+      usphone,
+      ukphone,
+      usspeech,
+      ukspeech,
+      trans,
       sentences,
-      pronunciation,
-      level,
-      frequency,
-      tags,
+      phrases,
       synonyms,
-      antonyms,
-      content,
+      relWords,
+      exams,
+      searchContent,
       createdAt,
       updatedAt);
   @override
@@ -554,109 +606,124 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       identical(this, other) ||
       (other is WordsTableData &&
           other.id == this.id &&
-          other.word == this.word &&
-          other.lemma == this.lemma &&
-          other.partsOfSpeech == this.partsOfSpeech &&
-          other.posMeanings == this.posMeanings &&
-          other.phrases == this.phrases &&
+          other.wordId == this.wordId &&
+          other.bookId == this.bookId &&
+          other.wordRank == this.wordRank &&
+          other.headWord == this.headWord &&
+          other.usphone == this.usphone &&
+          other.ukphone == this.ukphone &&
+          other.usspeech == this.usspeech &&
+          other.ukspeech == this.ukspeech &&
+          other.trans == this.trans &&
           other.sentences == this.sentences &&
-          other.pronunciation == this.pronunciation &&
-          other.level == this.level &&
-          other.frequency == this.frequency &&
-          other.tags == this.tags &&
+          other.phrases == this.phrases &&
           other.synonyms == this.synonyms &&
-          other.antonyms == this.antonyms &&
-          other.content == this.content &&
+          other.relWords == this.relWords &&
+          other.exams == this.exams &&
+          other.searchContent == this.searchContent &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
   final Value<int> id;
-  final Value<String> word;
-  final Value<String?> lemma;
-  final Value<String> partsOfSpeech;
-  final Value<String> posMeanings;
-  final Value<String> phrases;
+  final Value<String> wordId;
+  final Value<String> bookId;
+  final Value<int> wordRank;
+  final Value<String> headWord;
+  final Value<String?> usphone;
+  final Value<String?> ukphone;
+  final Value<String?> usspeech;
+  final Value<String?> ukspeech;
+  final Value<String> trans;
   final Value<String> sentences;
-  final Value<String> pronunciation;
-  final Value<String?> level;
-  final Value<int> frequency;
-  final Value<String> tags;
+  final Value<String> phrases;
   final Value<String> synonyms;
-  final Value<String> antonyms;
-  final Value<String> content;
+  final Value<String> relWords;
+  final Value<String> exams;
+  final Value<String> searchContent;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const WordsTableCompanion({
     this.id = const Value.absent(),
-    this.word = const Value.absent(),
-    this.lemma = const Value.absent(),
-    this.partsOfSpeech = const Value.absent(),
-    this.posMeanings = const Value.absent(),
-    this.phrases = const Value.absent(),
+    this.wordId = const Value.absent(),
+    this.bookId = const Value.absent(),
+    this.wordRank = const Value.absent(),
+    this.headWord = const Value.absent(),
+    this.usphone = const Value.absent(),
+    this.ukphone = const Value.absent(),
+    this.usspeech = const Value.absent(),
+    this.ukspeech = const Value.absent(),
+    this.trans = const Value.absent(),
     this.sentences = const Value.absent(),
-    this.pronunciation = const Value.absent(),
-    this.level = const Value.absent(),
-    this.frequency = const Value.absent(),
-    this.tags = const Value.absent(),
+    this.phrases = const Value.absent(),
     this.synonyms = const Value.absent(),
-    this.antonyms = const Value.absent(),
-    this.content = const Value.absent(),
+    this.relWords = const Value.absent(),
+    this.exams = const Value.absent(),
+    this.searchContent = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   WordsTableCompanion.insert({
     this.id = const Value.absent(),
-    required String word,
-    this.lemma = const Value.absent(),
-    this.partsOfSpeech = const Value.absent(),
-    this.posMeanings = const Value.absent(),
-    this.phrases = const Value.absent(),
+    required String wordId,
+    required String bookId,
+    required int wordRank,
+    required String headWord,
+    this.usphone = const Value.absent(),
+    this.ukphone = const Value.absent(),
+    this.usspeech = const Value.absent(),
+    this.ukspeech = const Value.absent(),
+    this.trans = const Value.absent(),
     this.sentences = const Value.absent(),
-    this.pronunciation = const Value.absent(),
-    this.level = const Value.absent(),
-    this.frequency = const Value.absent(),
-    this.tags = const Value.absent(),
+    this.phrases = const Value.absent(),
     this.synonyms = const Value.absent(),
-    this.antonyms = const Value.absent(),
-    this.content = const Value.absent(),
+    this.relWords = const Value.absent(),
+    this.exams = const Value.absent(),
+    this.searchContent = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : word = Value(word);
+  })  : wordId = Value(wordId),
+        bookId = Value(bookId),
+        wordRank = Value(wordRank),
+        headWord = Value(headWord);
   static Insertable<WordsTableData> custom({
     Expression<int>? id,
-    Expression<String>? word,
-    Expression<String>? lemma,
-    Expression<String>? partsOfSpeech,
-    Expression<String>? posMeanings,
-    Expression<String>? phrases,
+    Expression<String>? wordId,
+    Expression<String>? bookId,
+    Expression<int>? wordRank,
+    Expression<String>? headWord,
+    Expression<String>? usphone,
+    Expression<String>? ukphone,
+    Expression<String>? usspeech,
+    Expression<String>? ukspeech,
+    Expression<String>? trans,
     Expression<String>? sentences,
-    Expression<String>? pronunciation,
-    Expression<String>? level,
-    Expression<int>? frequency,
-    Expression<String>? tags,
+    Expression<String>? phrases,
     Expression<String>? synonyms,
-    Expression<String>? antonyms,
-    Expression<String>? content,
+    Expression<String>? relWords,
+    Expression<String>? exams,
+    Expression<String>? searchContent,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (word != null) 'word': word,
-      if (lemma != null) 'lemma': lemma,
-      if (partsOfSpeech != null) 'parts_of_speech': partsOfSpeech,
-      if (posMeanings != null) 'pos_meanings': posMeanings,
-      if (phrases != null) 'phrases': phrases,
+      if (wordId != null) 'word_id': wordId,
+      if (bookId != null) 'book_id': bookId,
+      if (wordRank != null) 'word_rank': wordRank,
+      if (headWord != null) 'head_word': headWord,
+      if (usphone != null) 'usphone': usphone,
+      if (ukphone != null) 'ukphone': ukphone,
+      if (usspeech != null) 'usspeech': usspeech,
+      if (ukspeech != null) 'ukspeech': ukspeech,
+      if (trans != null) 'trans': trans,
       if (sentences != null) 'sentences': sentences,
-      if (pronunciation != null) 'pronunciation': pronunciation,
-      if (level != null) 'level': level,
-      if (frequency != null) 'frequency': frequency,
-      if (tags != null) 'tags': tags,
+      if (phrases != null) 'phrases': phrases,
       if (synonyms != null) 'synonyms': synonyms,
-      if (antonyms != null) 'antonyms': antonyms,
-      if (content != null) 'content': content,
+      if (relWords != null) 'rel_words': relWords,
+      if (exams != null) 'exams': exams,
+      if (searchContent != null) 'search_content': searchContent,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -664,36 +731,40 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
 
   WordsTableCompanion copyWith(
       {Value<int>? id,
-      Value<String>? word,
-      Value<String?>? lemma,
-      Value<String>? partsOfSpeech,
-      Value<String>? posMeanings,
-      Value<String>? phrases,
+      Value<String>? wordId,
+      Value<String>? bookId,
+      Value<int>? wordRank,
+      Value<String>? headWord,
+      Value<String?>? usphone,
+      Value<String?>? ukphone,
+      Value<String?>? usspeech,
+      Value<String?>? ukspeech,
+      Value<String>? trans,
       Value<String>? sentences,
-      Value<String>? pronunciation,
-      Value<String?>? level,
-      Value<int>? frequency,
-      Value<String>? tags,
+      Value<String>? phrases,
       Value<String>? synonyms,
-      Value<String>? antonyms,
-      Value<String>? content,
+      Value<String>? relWords,
+      Value<String>? exams,
+      Value<String>? searchContent,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return WordsTableCompanion(
       id: id ?? this.id,
-      word: word ?? this.word,
-      lemma: lemma ?? this.lemma,
-      partsOfSpeech: partsOfSpeech ?? this.partsOfSpeech,
-      posMeanings: posMeanings ?? this.posMeanings,
-      phrases: phrases ?? this.phrases,
+      wordId: wordId ?? this.wordId,
+      bookId: bookId ?? this.bookId,
+      wordRank: wordRank ?? this.wordRank,
+      headWord: headWord ?? this.headWord,
+      usphone: usphone ?? this.usphone,
+      ukphone: ukphone ?? this.ukphone,
+      usspeech: usspeech ?? this.usspeech,
+      ukspeech: ukspeech ?? this.ukspeech,
+      trans: trans ?? this.trans,
       sentences: sentences ?? this.sentences,
-      pronunciation: pronunciation ?? this.pronunciation,
-      level: level ?? this.level,
-      frequency: frequency ?? this.frequency,
-      tags: tags ?? this.tags,
+      phrases: phrases ?? this.phrases,
       synonyms: synonyms ?? this.synonyms,
-      antonyms: antonyms ?? this.antonyms,
-      content: content ?? this.content,
+      relWords: relWords ?? this.relWords,
+      exams: exams ?? this.exams,
+      searchContent: searchContent ?? this.searchContent,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -705,44 +776,50 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (word.present) {
-      map['word'] = Variable<String>(word.value);
+    if (wordId.present) {
+      map['word_id'] = Variable<String>(wordId.value);
     }
-    if (lemma.present) {
-      map['lemma'] = Variable<String>(lemma.value);
+    if (bookId.present) {
+      map['book_id'] = Variable<String>(bookId.value);
     }
-    if (partsOfSpeech.present) {
-      map['parts_of_speech'] = Variable<String>(partsOfSpeech.value);
+    if (wordRank.present) {
+      map['word_rank'] = Variable<int>(wordRank.value);
     }
-    if (posMeanings.present) {
-      map['pos_meanings'] = Variable<String>(posMeanings.value);
+    if (headWord.present) {
+      map['head_word'] = Variable<String>(headWord.value);
     }
-    if (phrases.present) {
-      map['phrases'] = Variable<String>(phrases.value);
+    if (usphone.present) {
+      map['usphone'] = Variable<String>(usphone.value);
+    }
+    if (ukphone.present) {
+      map['ukphone'] = Variable<String>(ukphone.value);
+    }
+    if (usspeech.present) {
+      map['usspeech'] = Variable<String>(usspeech.value);
+    }
+    if (ukspeech.present) {
+      map['ukspeech'] = Variable<String>(ukspeech.value);
+    }
+    if (trans.present) {
+      map['trans'] = Variable<String>(trans.value);
     }
     if (sentences.present) {
       map['sentences'] = Variable<String>(sentences.value);
     }
-    if (pronunciation.present) {
-      map['pronunciation'] = Variable<String>(pronunciation.value);
-    }
-    if (level.present) {
-      map['level'] = Variable<String>(level.value);
-    }
-    if (frequency.present) {
-      map['frequency'] = Variable<int>(frequency.value);
-    }
-    if (tags.present) {
-      map['tags'] = Variable<String>(tags.value);
+    if (phrases.present) {
+      map['phrases'] = Variable<String>(phrases.value);
     }
     if (synonyms.present) {
       map['synonyms'] = Variable<String>(synonyms.value);
     }
-    if (antonyms.present) {
-      map['antonyms'] = Variable<String>(antonyms.value);
+    if (relWords.present) {
+      map['rel_words'] = Variable<String>(relWords.value);
     }
-    if (content.present) {
-      map['content'] = Variable<String>(content.value);
+    if (exams.present) {
+      map['exams'] = Variable<String>(exams.value);
+    }
+    if (searchContent.present) {
+      map['search_content'] = Variable<String>(searchContent.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -757,19 +834,21 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
   String toString() {
     return (StringBuffer('WordsTableCompanion(')
           ..write('id: $id, ')
-          ..write('word: $word, ')
-          ..write('lemma: $lemma, ')
-          ..write('partsOfSpeech: $partsOfSpeech, ')
-          ..write('posMeanings: $posMeanings, ')
-          ..write('phrases: $phrases, ')
+          ..write('wordId: $wordId, ')
+          ..write('bookId: $bookId, ')
+          ..write('wordRank: $wordRank, ')
+          ..write('headWord: $headWord, ')
+          ..write('usphone: $usphone, ')
+          ..write('ukphone: $ukphone, ')
+          ..write('usspeech: $usspeech, ')
+          ..write('ukspeech: $ukspeech, ')
+          ..write('trans: $trans, ')
           ..write('sentences: $sentences, ')
-          ..write('pronunciation: $pronunciation, ')
-          ..write('level: $level, ')
-          ..write('frequency: $frequency, ')
-          ..write('tags: $tags, ')
+          ..write('phrases: $phrases, ')
           ..write('synonyms: $synonyms, ')
-          ..write('antonyms: $antonyms, ')
-          ..write('content: $content, ')
+          ..write('relWords: $relWords, ')
+          ..write('exams: $exams, ')
+          ..write('searchContent: $searchContent, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2541,37 +2620,41 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 typedef $$WordsTableTableCreateCompanionBuilder = WordsTableCompanion Function({
   Value<int> id,
-  required String word,
-  Value<String?> lemma,
-  Value<String> partsOfSpeech,
-  Value<String> posMeanings,
-  Value<String> phrases,
+  required String wordId,
+  required String bookId,
+  required int wordRank,
+  required String headWord,
+  Value<String?> usphone,
+  Value<String?> ukphone,
+  Value<String?> usspeech,
+  Value<String?> ukspeech,
+  Value<String> trans,
   Value<String> sentences,
-  Value<String> pronunciation,
-  Value<String?> level,
-  Value<int> frequency,
-  Value<String> tags,
+  Value<String> phrases,
   Value<String> synonyms,
-  Value<String> antonyms,
-  Value<String> content,
+  Value<String> relWords,
+  Value<String> exams,
+  Value<String> searchContent,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
 typedef $$WordsTableTableUpdateCompanionBuilder = WordsTableCompanion Function({
   Value<int> id,
-  Value<String> word,
-  Value<String?> lemma,
-  Value<String> partsOfSpeech,
-  Value<String> posMeanings,
-  Value<String> phrases,
+  Value<String> wordId,
+  Value<String> bookId,
+  Value<int> wordRank,
+  Value<String> headWord,
+  Value<String?> usphone,
+  Value<String?> ukphone,
+  Value<String?> usspeech,
+  Value<String?> ukspeech,
+  Value<String> trans,
   Value<String> sentences,
-  Value<String> pronunciation,
-  Value<String?> level,
-  Value<int> frequency,
-  Value<String> tags,
+  Value<String> phrases,
   Value<String> synonyms,
-  Value<String> antonyms,
-  Value<String> content,
+  Value<String> relWords,
+  Value<String> exams,
+  Value<String> searchContent,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -2608,44 +2691,50 @@ class $$WordsTableTableFilterComposer
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get word => $composableBuilder(
-      column: $table.word, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get wordId => $composableBuilder(
+      column: $table.wordId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lemma => $composableBuilder(
-      column: $table.lemma, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get bookId => $composableBuilder(
+      column: $table.bookId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get partsOfSpeech => $composableBuilder(
-      column: $table.partsOfSpeech, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get wordRank => $composableBuilder(
+      column: $table.wordRank, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get posMeanings => $composableBuilder(
-      column: $table.posMeanings, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get headWord => $composableBuilder(
+      column: $table.headWord, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get phrases => $composableBuilder(
-      column: $table.phrases, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get usphone => $composableBuilder(
+      column: $table.usphone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ukphone => $composableBuilder(
+      column: $table.ukphone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get usspeech => $composableBuilder(
+      column: $table.usspeech, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ukspeech => $composableBuilder(
+      column: $table.ukspeech, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get trans => $composableBuilder(
+      column: $table.trans, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get sentences => $composableBuilder(
       column: $table.sentences, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get pronunciation => $composableBuilder(
-      column: $table.pronunciation, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get frequency => $composableBuilder(
-      column: $table.frequency, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get tags => $composableBuilder(
-      column: $table.tags, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get phrases => $composableBuilder(
+      column: $table.phrases, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get synonyms => $composableBuilder(
       column: $table.synonyms, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get antonyms => $composableBuilder(
-      column: $table.antonyms, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get relWords => $composableBuilder(
+      column: $table.relWords, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get exams => $composableBuilder(
+      column: $table.exams, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get searchContent => $composableBuilder(
+      column: $table.searchContent, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -2687,46 +2776,51 @@ class $$WordsTableTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get word => $composableBuilder(
-      column: $table.word, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get wordId => $composableBuilder(
+      column: $table.wordId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lemma => $composableBuilder(
-      column: $table.lemma, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get bookId => $composableBuilder(
+      column: $table.bookId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get partsOfSpeech => $composableBuilder(
-      column: $table.partsOfSpeech,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get wordRank => $composableBuilder(
+      column: $table.wordRank, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get posMeanings => $composableBuilder(
-      column: $table.posMeanings, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get headWord => $composableBuilder(
+      column: $table.headWord, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get phrases => $composableBuilder(
-      column: $table.phrases, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get usphone => $composableBuilder(
+      column: $table.usphone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ukphone => $composableBuilder(
+      column: $table.ukphone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get usspeech => $composableBuilder(
+      column: $table.usspeech, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ukspeech => $composableBuilder(
+      column: $table.ukspeech, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get trans => $composableBuilder(
+      column: $table.trans, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get sentences => $composableBuilder(
       column: $table.sentences, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get pronunciation => $composableBuilder(
-      column: $table.pronunciation,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get frequency => $composableBuilder(
-      column: $table.frequency, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get tags => $composableBuilder(
-      column: $table.tags, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get phrases => $composableBuilder(
+      column: $table.phrases, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get synonyms => $composableBuilder(
       column: $table.synonyms, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get antonyms => $composableBuilder(
-      column: $table.antonyms, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get relWords => $composableBuilder(
+      column: $table.relWords, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get exams => $composableBuilder(
+      column: $table.exams, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get searchContent => $composableBuilder(
+      column: $table.searchContent,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -2747,44 +2841,50 @@ class $$WordsTableTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get word =>
-      $composableBuilder(column: $table.word, builder: (column) => column);
+  GeneratedColumn<String> get wordId =>
+      $composableBuilder(column: $table.wordId, builder: (column) => column);
 
-  GeneratedColumn<String> get lemma =>
-      $composableBuilder(column: $table.lemma, builder: (column) => column);
+  GeneratedColumn<String> get bookId =>
+      $composableBuilder(column: $table.bookId, builder: (column) => column);
 
-  GeneratedColumn<String> get partsOfSpeech => $composableBuilder(
-      column: $table.partsOfSpeech, builder: (column) => column);
+  GeneratedColumn<int> get wordRank =>
+      $composableBuilder(column: $table.wordRank, builder: (column) => column);
 
-  GeneratedColumn<String> get posMeanings => $composableBuilder(
-      column: $table.posMeanings, builder: (column) => column);
+  GeneratedColumn<String> get headWord =>
+      $composableBuilder(column: $table.headWord, builder: (column) => column);
 
-  GeneratedColumn<String> get phrases =>
-      $composableBuilder(column: $table.phrases, builder: (column) => column);
+  GeneratedColumn<String> get usphone =>
+      $composableBuilder(column: $table.usphone, builder: (column) => column);
+
+  GeneratedColumn<String> get ukphone =>
+      $composableBuilder(column: $table.ukphone, builder: (column) => column);
+
+  GeneratedColumn<String> get usspeech =>
+      $composableBuilder(column: $table.usspeech, builder: (column) => column);
+
+  GeneratedColumn<String> get ukspeech =>
+      $composableBuilder(column: $table.ukspeech, builder: (column) => column);
+
+  GeneratedColumn<String> get trans =>
+      $composableBuilder(column: $table.trans, builder: (column) => column);
 
   GeneratedColumn<String> get sentences =>
       $composableBuilder(column: $table.sentences, builder: (column) => column);
 
-  GeneratedColumn<String> get pronunciation => $composableBuilder(
-      column: $table.pronunciation, builder: (column) => column);
-
-  GeneratedColumn<String> get level =>
-      $composableBuilder(column: $table.level, builder: (column) => column);
-
-  GeneratedColumn<int> get frequency =>
-      $composableBuilder(column: $table.frequency, builder: (column) => column);
-
-  GeneratedColumn<String> get tags =>
-      $composableBuilder(column: $table.tags, builder: (column) => column);
+  GeneratedColumn<String> get phrases =>
+      $composableBuilder(column: $table.phrases, builder: (column) => column);
 
   GeneratedColumn<String> get synonyms =>
       $composableBuilder(column: $table.synonyms, builder: (column) => column);
 
-  GeneratedColumn<String> get antonyms =>
-      $composableBuilder(column: $table.antonyms, builder: (column) => column);
+  GeneratedColumn<String> get relWords =>
+      $composableBuilder(column: $table.relWords, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get exams =>
+      $composableBuilder(column: $table.exams, builder: (column) => column);
+
+  GeneratedColumn<String> get searchContent => $composableBuilder(
+      column: $table.searchContent, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2838,73 +2938,81 @@ class $$WordsTableTableTableManager extends RootTableManager<
               $$WordsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<String> word = const Value.absent(),
-            Value<String?> lemma = const Value.absent(),
-            Value<String> partsOfSpeech = const Value.absent(),
-            Value<String> posMeanings = const Value.absent(),
-            Value<String> phrases = const Value.absent(),
+            Value<String> wordId = const Value.absent(),
+            Value<String> bookId = const Value.absent(),
+            Value<int> wordRank = const Value.absent(),
+            Value<String> headWord = const Value.absent(),
+            Value<String?> usphone = const Value.absent(),
+            Value<String?> ukphone = const Value.absent(),
+            Value<String?> usspeech = const Value.absent(),
+            Value<String?> ukspeech = const Value.absent(),
+            Value<String> trans = const Value.absent(),
             Value<String> sentences = const Value.absent(),
-            Value<String> pronunciation = const Value.absent(),
-            Value<String?> level = const Value.absent(),
-            Value<int> frequency = const Value.absent(),
-            Value<String> tags = const Value.absent(),
+            Value<String> phrases = const Value.absent(),
             Value<String> synonyms = const Value.absent(),
-            Value<String> antonyms = const Value.absent(),
-            Value<String> content = const Value.absent(),
+            Value<String> relWords = const Value.absent(),
+            Value<String> exams = const Value.absent(),
+            Value<String> searchContent = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               WordsTableCompanion(
             id: id,
-            word: word,
-            lemma: lemma,
-            partsOfSpeech: partsOfSpeech,
-            posMeanings: posMeanings,
-            phrases: phrases,
+            wordId: wordId,
+            bookId: bookId,
+            wordRank: wordRank,
+            headWord: headWord,
+            usphone: usphone,
+            ukphone: ukphone,
+            usspeech: usspeech,
+            ukspeech: ukspeech,
+            trans: trans,
             sentences: sentences,
-            pronunciation: pronunciation,
-            level: level,
-            frequency: frequency,
-            tags: tags,
+            phrases: phrases,
             synonyms: synonyms,
-            antonyms: antonyms,
-            content: content,
+            relWords: relWords,
+            exams: exams,
+            searchContent: searchContent,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required String word,
-            Value<String?> lemma = const Value.absent(),
-            Value<String> partsOfSpeech = const Value.absent(),
-            Value<String> posMeanings = const Value.absent(),
-            Value<String> phrases = const Value.absent(),
+            required String wordId,
+            required String bookId,
+            required int wordRank,
+            required String headWord,
+            Value<String?> usphone = const Value.absent(),
+            Value<String?> ukphone = const Value.absent(),
+            Value<String?> usspeech = const Value.absent(),
+            Value<String?> ukspeech = const Value.absent(),
+            Value<String> trans = const Value.absent(),
             Value<String> sentences = const Value.absent(),
-            Value<String> pronunciation = const Value.absent(),
-            Value<String?> level = const Value.absent(),
-            Value<int> frequency = const Value.absent(),
-            Value<String> tags = const Value.absent(),
+            Value<String> phrases = const Value.absent(),
             Value<String> synonyms = const Value.absent(),
-            Value<String> antonyms = const Value.absent(),
-            Value<String> content = const Value.absent(),
+            Value<String> relWords = const Value.absent(),
+            Value<String> exams = const Value.absent(),
+            Value<String> searchContent = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               WordsTableCompanion.insert(
             id: id,
-            word: word,
-            lemma: lemma,
-            partsOfSpeech: partsOfSpeech,
-            posMeanings: posMeanings,
-            phrases: phrases,
+            wordId: wordId,
+            bookId: bookId,
+            wordRank: wordRank,
+            headWord: headWord,
+            usphone: usphone,
+            ukphone: ukphone,
+            usspeech: usspeech,
+            ukspeech: ukspeech,
+            trans: trans,
             sentences: sentences,
-            pronunciation: pronunciation,
-            level: level,
-            frequency: frequency,
-            tags: tags,
+            phrases: phrases,
             synonyms: synonyms,
-            antonyms: antonyms,
-            content: content,
+            relWords: relWords,
+            exams: exams,
+            searchContent: searchContent,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),

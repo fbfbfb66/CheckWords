@@ -6,7 +6,7 @@ part of 'words_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wordByIdHash() => r'c3fc9fcd7b514f3d274ac87e1847daef6b0c455b';
+String _$wordByIdHash() => r'fb72e700774cbc8d215c24ade2cf2515698c5565';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -166,7 +166,25 @@ class _WordByIdProviderElement
   int get wordId => (origin as WordByIdProvider).wordId;
 }
 
-String _$wordByNameHash() => r'13e04c298667de1fb029952f89920b5660fd7fba';
+String _$databaseStatusHash() => r'4f11a3e8d0a9f8c6927f5f3679ceae04eab65ef8';
+
+/// 检查数据库状态（调试用）
+///
+/// Copied from [databaseStatus].
+@ProviderFor(databaseStatus)
+final databaseStatusProvider =
+    AutoDisposeFutureProvider<DatabaseStatus>.internal(
+  databaseStatus,
+  name: r'databaseStatusProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$databaseStatusHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef DatabaseStatusRef = AutoDisposeFutureProviderRef<DatabaseStatus>;
+String _$wordByNameHash() => r'd00e893d28f04e279c0ff854bf36b9823d78cee3';
 
 /// 根据单词名称获取单词详情
 ///
@@ -306,7 +324,7 @@ class _WordByNameProviderElement
   String get word => (origin as WordByNameProvider).word;
 }
 
-String _$searchWordsHash() => r'2985758d5723def3970bde58e2fa37d99fa30181';
+String _$searchWordsHash() => r'4adbb2b2c601c487af02b34b383179fd974d1e76';
 
 /// 搜索单词
 ///
@@ -464,7 +482,7 @@ class _SearchWordsProviderElement
   int get limit => (origin as SearchWordsProvider).limit;
 }
 
-String _$fuzzySearchWordsHash() => r'5ba499cb9d2614db59c9fd700d005ae79172e784';
+String _$fuzzySearchWordsHash() => r'c6155fdb513445d9013e37aac5256113781ecac5';
 
 /// 模糊搜索单词（用于输入提示）
 ///
@@ -623,7 +641,7 @@ class _FuzzySearchWordsProviderElement
   int get limit => (origin as FuzzySearchWordsProvider).limit;
 }
 
-String _$popularWordsHash() => r'7837757d7252d7efe8c75259970e493a593f40ca';
+String _$popularWordsHash() => r'4497ce76f115aa5095d99451da228195790f5447';
 
 /// 获取热门单词
 ///
@@ -764,7 +782,7 @@ class _PopularWordsProviderElement
   int get limit => (origin as PopularWordsProvider).limit;
 }
 
-String _$wordsByLevelHash() => r'3dfe7c61a73918c19c7dfa47955fc7c2313aebb4';
+String _$wordsByLevelHash() => r'62e4b5b472d6f3b12e0b36b48909a85d30b80bba';
 
 /// 根据等级获取单词
 ///

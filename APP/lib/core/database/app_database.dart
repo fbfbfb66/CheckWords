@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6; // 🚨 强制升级：修复搜索排序问题
+  int get schemaVersion => 11; // 🚨 升级到版本11：强制重新创建数据库结构
 
   @override
   MigrationStrategy get migration {
@@ -54,8 +54,8 @@ class AppDatabase extends _$AppDatabase {
         // 创建FTS5虚拟表用于全文搜索
         await customStatement('''
           CREATE VIRTUAL TABLE words_fts USING fts5(
-            word,
-            lemma,
+            head_word,
+            word_id,
             search_content
           );
         ''');
@@ -63,8 +63,8 @@ class AppDatabase extends _$AppDatabase {
         // 创建触发器保持FTS表同步
         await customStatement('''
           CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
-            INSERT INTO words_fts(rowid, word, lemma, search_content) 
-            VALUES (new.id, new.word, new.lemma, new.content);
+            INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+            VALUES (new.id, new.head_word, new.word_id, new.search_content);
           END;
         ''');
 
@@ -77,16 +77,18 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('''
           CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
             DELETE FROM words_fts WHERE rowid = old.id;
-            INSERT INTO words_fts(rowid, word, lemma, search_content) 
-            VALUES (new.id, new.word, new.lemma, new.content);
+            INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+            VALUES (new.id, new.head_word, new.word_id, new.search_content);
           END;
         ''');
 
         // 创建索引
         await customStatement(
-            'CREATE INDEX idx_words_frequency ON words_table(frequency DESC);');
+            'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
         await customStatement(
-            'CREATE INDEX idx_words_level ON words_table(level);');
+            'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+        await customStatement(
+            'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
         await customStatement(
             'CREATE INDEX idx_user_words_user_id ON user_words_table(user_id);');
         await customStatement(
@@ -260,6 +262,229 @@ class AppDatabase extends _$AppDatabase {
           print('🚨🚨🚨 [Database] 版本6升级完成：已重置数据，强制重新导入');
           print('🚨🚨🚨 [Database] 新版本将使用优化的搜索排序逻辑');
         }
+
+        // 从版本6升级到版本7：适配kajweb/dict JSON格式
+        if (from <= 6 && to >= 7) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本7：适配kajweb/dict JSON格式！🚨🚨🚨');
+
+          // 由于表结构发生重大变化，需要重建表
+          await customStatement('DROP TABLE IF EXISTS words_fts');
+          await customStatement('DROP TABLE IF EXISTS words_table');
+
+          // 重新创建所有表结构
+          await m.createAll();
+
+          // 重新创建FTS5虚拟表用于全文搜索
+          await customStatement('''
+            CREATE VIRTUAL TABLE words_fts USING fts5(
+              head_word,
+              word_id,
+              search_content
+            );
+          ''');
+
+          // 重新创建触发器保持FTS表同步
+          await customStatement('''
+            CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          // 重新创建索引
+          await customStatement(
+              'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+
+          print('🚨🚨🚨 [Database] 版本7升级完成：表结构已更新，需要重新导入数据');
+        }
+
+        // 从版本7升级到版本8：修复字段名不匹配问题
+        if (from <= 7 && to >= 8) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本8：修复字段名不匹配问题！🚨🚨🚨');
+
+          // 由于字段名不匹配导致FTS5触发器失效，需要重建表
+          await customStatement('DROP TABLE IF EXISTS words_fts');
+          await customStatement('DROP TABLE IF EXISTS words_table');
+
+          // 重新创建所有表结构
+          await m.createAll();
+
+          // 重新创建FTS5虚拟表用于全文搜索
+          await customStatement('''
+            CREATE VIRTUAL TABLE words_fts USING fts5(
+              head_word,
+              word_id,
+              search_content
+            );
+          ''');
+
+          // 重新创建触发器保持FTS表同步
+          await customStatement('''
+            CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          // 重新创建索引
+          await customStatement(
+              'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+
+          print('🚨🚨🚨 [Database] 版本8升级完成：字段名已修复，需要重新导入数据');
+        }
+
+        // 从版本8升级到版本9：强制重新导入真实CET4数据
+        if (from <= 8 && to >= 9) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本9：强制重新导入真实CET4数据！🚨🚨🚨');
+
+          // 由于数据导入逻辑已更新，需要清空现有数据并重新导入
+          await customStatement('DELETE FROM words_table');
+          await customStatement('DELETE FROM words_fts');
+
+          print('🚨🚨🚨 [Database] 版本9升级完成：已清空数据，强制重新导入真实CET4数据');
+        }
+
+        // 从版本9升级到版本10：修复发音字段架构
+        if (from <= 9 && to >= 10) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本10：修复发音字段架构！🚨🚨🚨');
+
+          // 由于发音字段架构发生重大变化（从JSON字段改为独立字段），需要重建表
+          await customStatement('DROP TABLE IF EXISTS words_fts');
+          await customStatement('DROP TABLE IF EXISTS words_table');
+
+          // 重新创建所有表结构
+          await m.createAll();
+
+          // 重新创建FTS5虚拟表用于全文搜索
+          await customStatement('''
+            CREATE VIRTUAL TABLE words_fts USING fts5(
+              head_word,
+              word_id,
+              search_content
+            );
+          ''');
+
+          // 重新创建触发器保持FTS表同步
+          await customStatement('''
+            CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          // 重新创建索引
+          await customStatement(
+              'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+
+          print('🚨🚨🚨 [Database] 版本10升级完成：发音字段架构已修复，需要重新导入数据');
+        }
+
+        // 从版本10升级到版本11：强制重新创建数据库结构（解决迁移未执行问题）
+        if (from <= 10 && to >= 11) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本11：强制重新创建数据库结构！🚨🚨🚨');
+
+          // 由于迁移逻辑问题，需要完全重建数据库
+          await customStatement('DROP TABLE IF EXISTS words_fts');
+          await customStatement('DROP TABLE IF EXISTS words_table');
+
+          // 重新创建所有表结构
+          await m.createAll();
+
+          // 重新创建FTS5虚拟表用于全文搜索
+          await customStatement('''
+            CREATE VIRTUAL TABLE words_fts USING fts5(
+              head_word,
+              word_id,
+              search_content
+            );
+          ''');
+
+          // 重新创建触发器保持FTS表同步
+          await customStatement('''
+            CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+              DELETE FROM words_fts WHERE rowid = old.id;
+              INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+              VALUES (new.id, new.head_word, new.word_id, new.search_content);
+            END;
+          ''');
+
+          // 重新创建索引
+          await customStatement(
+              'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+          await customStatement(
+              'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+
+          print('🚨🚨🚨 [Database] 版本11升级完成：数据库结构已完全重建，包含独立发音字段');
+        }
       },
       beforeOpen: (details) async {
         // 启用外键约束
@@ -270,8 +495,87 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('PRAGMA synchronous = NORMAL');
         await customStatement('PRAGMA cache_size = 10000');
         await customStatement('PRAGMA temp_store = MEMORY');
+
+        // 检查是否存在表结构，如果不存在则重新创建
+        try {
+          final tableExists = await customSelect("SELECT name FROM sqlite_master WHERE type='table' AND name='words_table'").get();
+          if (tableExists.isEmpty && details.versionNow == 7) {
+            print('🚨🚨🚨 [Database] 数据库存在但表结构缺失，重新创建表结构...');
+            await _createTableStructure();
+            print('🚨🚨🚨 [Database] 表结构重新创建完成');
+          }
+        } catch (e) {
+          print('🚨🚨🚨 [Database] 检查表结构失败: $e');
+        }
       },
     );
+  }
+
+  /// 创建表结构（用于手动创建）
+  Future<void> _createTableStructure() async {
+    print('🚨🚨🚨 [Database] 开始创建表结构...');
+
+    // 先创建主要的 words_table 表结构（模拟 Drift 的创建）
+    await customStatement('''
+      CREATE TABLE words_table (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        word_id TEXT NOT NULL,
+        book_id TEXT NOT NULL,
+        word_rank INTEGER NOT NULL,
+        head_word TEXT NOT NULL,
+        pronunciation TEXT NOT NULL DEFAULT '{}',
+        trans TEXT NOT NULL DEFAULT '[]',
+        sentences TEXT NOT NULL DEFAULT '[]',
+        phrases TEXT NOT NULL DEFAULT '[]',
+        synonyms TEXT NOT NULL DEFAULT '[]',
+        rel_words TEXT NOT NULL DEFAULT '[]',
+        exams TEXT NOT NULL DEFAULT '[]',
+        search_content TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    ''');
+
+    // 创建FTS5虚拟表用于全文搜索
+    await customStatement('''
+      CREATE VIRTUAL TABLE words_fts USING fts5(
+        head_word,
+        word_id,
+        search_content
+      );
+    ''');
+
+    // 创建触发器保持FTS表同步
+    await customStatement('''
+      CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
+        INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+        VALUES (new.id, new.head_word, new.word_id, new.search_content);
+      END;
+    ''');
+
+    await customStatement('''
+      CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
+        DELETE FROM words_fts WHERE rowid = old.id;
+      END;
+    ''');
+
+    await customStatement('''
+      CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
+        DELETE FROM words_fts WHERE rowid = old.id;
+        INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+        VALUES (new.id, new.head_word, new.word_id, new.search_content);
+      END;
+    ''');
+
+    // 创建索引
+    await customStatement(
+        'CREATE INDEX idx_words_word_rank ON words_table(word_rank ASC);');
+    await customStatement(
+        'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
+    await customStatement(
+        'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+
+    print('🚨🚨🚨 [Database] 表结构创建完成');
   }
 
   /// 全文搜索单词
@@ -296,16 +600,16 @@ class AppDatabase extends _$AppDatabase {
         final remainingLimit = limit - results.length;
         final ftsResults =
             await _performFTS5Search('$queryTrimmed*', remainingLimit, offset);
-        final existing = results.map((r) => r.word).toSet();
+        final existing = results.map((r) => r.headWord).toSet();
         results.addAll(
-          ftsResults.where((result) => !existing.contains(result.word)),
+          ftsResults.where((result) => !existing.contains(result.headWord)),
         );
       }
 
       final queryLower = queryTrimmed.toLowerCase();
       results.sort((a, b) {
-        final aWord = a.word.toLowerCase();
-        final bWord = b.word.toLowerCase();
+        final aWord = a.headWord.toLowerCase();
+        final bWord = b.headWord.toLowerCase();
         final aExact = aWord == queryLower;
         final bExact = bWord == queryLower;
         if (aExact != bExact) {
@@ -316,11 +620,11 @@ class AppDatabase extends _$AppDatabase {
         if (aStarts != bStarts) {
           return aStarts ? -1 : 1;
         }
-        final frequencyCompare = b.frequency.compareTo(a.frequency);
-        if (frequencyCompare != 0) {
-          return frequencyCompare;
+        final rankCompare = a.wordRank.compareTo(b.wordRank);
+        if (rankCompare != 0) {
+          return rankCompare;
         }
-        return a.word.length.compareTo(b.word.length);
+        return a.headWord.length.compareTo(b.headWord.length);
       });
 
       return results;
@@ -340,17 +644,17 @@ class AppDatabase extends _$AppDatabase {
 
     final sqlQuery = '''
       SELECT w.* FROM words_table w
-      WHERE w.word LIKE ? || '%'
-      AND w.word NOT GLOB '[0-9]*'
-      AND LENGTH(w.word) > 1
-      AND w.word GLOB '[a-zA-Z]*'
+      WHERE w.head_word LIKE ? || '%'
+      AND w.head_word NOT GLOB '[0-9]*'
+      AND LENGTH(w.head_word) > 1
+      AND w.head_word GLOB '[a-zA-Z]*'
       ORDER BY
         CASE
-          WHEN w.word = ? THEN 0                    -- 🥇 完全匹配优先
+          WHEN w.head_word = ? THEN 0                 -- 🥇 完全匹配优先
           ELSE 1
         END,
-        w.frequency DESC,
-        LENGTH(w.word) ASC
+        w.word_rank ASC,
+        LENGTH(w.head_word) ASC
       LIMIT ? OFFSET ?
     ''';
 
@@ -372,9 +676,9 @@ class AppDatabase extends _$AppDatabase {
 
     // 调试输出所有结果
     for (int i = 0; i < results.length; i++) {
-      final word = results[i].data['word'];
-      final frequency = results[i].data['frequency'];
-      print('🚨 [前缀搜索] 结果${i + 1}: "$word" (频率:$frequency)');
+      final headWord = results[i].data['headWord'];
+      final wordRank = results[i].data['wordRank'];
+      print('🚨 [前缀搜索] 结果${i + 1}: "$headWord" (排名:$wordRank)');
     }
 
     // 🔧 终极修复：使用Drift的select方法，避免fromJson转换问题
@@ -382,12 +686,12 @@ class AppDatabase extends _$AppDatabase {
 
     // 🔧 简化查询：先使用基础排序，确保能工作
     final driftResults = await (select(wordsTable)
-          ..where((tbl) => tbl.word.like('$queryWord%'))
-          ..where((tbl) => tbl.word.isNotNull())
-          ..where((tbl) => tbl.word.length.isBiggerThanValue(1))
+          ..where((tbl) => tbl.headWord.like('$queryWord%'))
+          ..where((tbl) => tbl.headWord.isNotNull())
+          ..where((tbl) => tbl.headWord.length.isBiggerThanValue(1))
           ..orderBy([
-            (t) => OrderingTerm.desc(t.frequency),
-            (t) => OrderingTerm.asc(t.word.length),
+            (t) => OrderingTerm.asc(t.wordRank),
+            (t) => OrderingTerm.asc(t.headWord.length),
           ])
           ..limit(limit, offset: offset))
         .get();
@@ -397,7 +701,7 @@ class AppDatabase extends _$AppDatabase {
     // 输出前几个结果
     for (int i = 0; i < driftResults.length && i < 5; i++) {
       print(
-          '🚨 [Drift结果] ${i + 1}: "${driftResults[i].word}" (频率:${driftResults[i].frequency})');
+          '🚨 [Drift结果] ${i + 1}: "${driftResults[i].headWord}" (排名:${driftResults[i].wordRank})');
     }
 
     return driftResults;
@@ -418,20 +722,20 @@ class AppDatabase extends _$AppDatabase {
       SELECT
         w.*,
         CASE
-          WHEN w.word = ? THEN 0                    -- 🥇 完全匹配优先
-          WHEN w.word LIKE ? || '%' THEN 1          -- 🥈 真正的前缀匹配优先
+          WHEN w.head_word = ? THEN 0                -- 🥇 完全匹配优先
+          WHEN w.head_word LIKE ? || '%' THEN 1       -- 🥈 真正的前缀匹配优先
           ELSE 2                                    -- 🥉 例句/释义匹配最后
         END as match_priority
       FROM words_table w
       INNER JOIN words_fts fts ON w.id = fts.rowid
       WHERE words_fts MATCH ?
-      AND w.word NOT GLOB '[0-9]*'
-      AND LENGTH(w.word) > 1
-      AND w.word GLOB '[a-zA-Z]*'
+      AND w.head_word NOT GLOB '[0-9]*'
+      AND LENGTH(w.head_word) > 1
+      AND w.head_word GLOB '[a-zA-Z]*'
       ORDER BY
         match_priority,
-        w.frequency DESC,
-        LENGTH(w.word) ASC
+        w.word_rank ASC,
+        LENGTH(w.head_word) ASC
       LIMIT ? OFFSET ?
     ''';
 
@@ -470,8 +774,8 @@ class AppDatabase extends _$AppDatabase {
 
     try {
       final results = await (select(wordsTable)
-            ..where((tbl) => tbl.word.lower().like('%$queryLower%'))
-            ..orderBy([(t) => OrderingTerm.desc(t.frequency)])
+            ..where((tbl) => tbl.headWord.lower().like('%$queryLower%'))
+            ..orderBy([(t) => OrderingTerm.asc(t.wordRank)])
             ..limit(limit))
           .get();
 
@@ -480,8 +784,8 @@ class AppDatabase extends _$AppDatabase {
       }
 
       return await (select(wordsTable)
-            ..where((tbl) => tbl.content.lower().like('%$queryLower%'))
-            ..orderBy([(t) => OrderingTerm.desc(t.frequency)])
+            ..where((tbl) => tbl.searchContent.lower().like('%$queryLower%'))
+            ..orderBy([(t) => OrderingTerm.asc(t.wordRank)])
             ..limit(limit))
           .get();
     } catch (e) {
@@ -493,20 +797,20 @@ class AppDatabase extends _$AppDatabase {
   /// 获取热门单词
   Future<List<WordsTableData>> getPopularWords({int limit = 50}) async {
     return (select(wordsTable)
-          ..orderBy([(t) => OrderingTerm.desc(t.frequency)])
+          ..orderBy([(t) => OrderingTerm.asc(t.wordRank)])
           ..limit(limit))
         .get();
   }
 
-  /// 根据等级获取单词
-  Future<List<WordsTableData>> getWordsByLevel(
-    String level, {
+  /// 根据书籍ID获取单词
+  Future<List<WordsTableData>> getWordsByBookId(
+    String bookId, {
     int limit = 100,
     int offset = 0,
   }) async {
     final query = select(wordsTable)
-      ..where((tbl) => tbl.level.equals(level))
-      ..orderBy([(t) => OrderingTerm.desc(t.frequency)])
+      ..where((tbl) => tbl.bookId.equals(bookId))
+      ..orderBy([(t) => OrderingTerm.asc(t.wordRank)])
       ..limit(limit);
 
     if (offset > 0) {

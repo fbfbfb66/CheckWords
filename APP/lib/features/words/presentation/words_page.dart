@@ -243,7 +243,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
 
         return wordAsync.when(
           data: (word) {
-            final displayWord = word?.word ?? keyword;
+            final displayWord = word?.headWord ?? keyword;
             return _buildHistoryBubble(
               displayWord: displayWord,
               partsOfSpeech: word?.partsOfSpeech ?? const [],
@@ -390,7 +390,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
       margin: const EdgeInsets.only(bottom: DesignTokens.spacingSmall),
       child: ListTile(
         title: Text(
-          word.word,
+          word.headWord,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -439,7 +439,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
           ],
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => _navigateToWordDetail(word.id, word.word),
+        onTap: () => _navigateToWordDetail(word.id, word.headWord),
       ),
     );
   }
