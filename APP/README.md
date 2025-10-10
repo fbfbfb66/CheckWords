@@ -112,13 +112,24 @@ flutter build ios --release
         "sentence": {"sentences": [{"sContent": "例句", "sCn": "中文翻译"}]},
         "phrase": {"phrases": [{"pContent": "短语", "pCn": "中文释义"}]},
         "syno": {"synos": [{"pos": "词性", "tran": "释义", "hwds": [{"w": "同义词"}]}]},
-        "relWord": {"rels": [{"pos": "词性", "words": [{"hwd": "相关词", "tran": "释义"}]}]},
-        "exam": [{"question": "考题", "choices": [{"choice": "选项"}]}]
+        "relWord": {"rels": [{"pos": "词性", "words": [{"hwd": "相关词", "tran": "释义"}]}]}
       }
     }
   }
 }
 ```
+
+### 当前数据字段说明
+- **headWord**: 单词本身
+- **bookId**: 数据源标识（如CET4luan_1, CET6luan_1等）
+- **wordRank**: 单词排序
+- **usphone/ukphone**: 美式/英式音标
+- **trans**: 词性和释义信息
+- **sentence**: 例句和翻译
+- **phrase**: 相关短语
+- **syno**: 同近义词
+- **relWord**: 同根词
+- **exam**: 考试题目（应用支持该字段，但当前数据源暂未包含）
 
 ### 数据导入流程
 
