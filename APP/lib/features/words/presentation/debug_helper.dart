@@ -215,7 +215,7 @@ class DebugHelper {
             children: [
               Text(success 
                 ? '✅ 数据重新导入成功！\n🔍 搜索功能已恢复\n📊 所有单词数据已更新' 
-                : '❌ 数据导入失败\n请检查assets/data/words_seed.json文件\n或重启应用后再试'),
+                : '❌ 数据导入失败\n请检查assets/data/json/words_seed.json文件\n或重启应用后再试'),
               if (success) const SizedBox(height: 16),
               if (success) const Text('现在可以正常搜索单词了！', 
                 style: TextStyle(fontWeight: FontWeight.bold)),

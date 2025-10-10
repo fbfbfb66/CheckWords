@@ -9,7 +9,11 @@
       "Bash(flutter analyze:*)",
       "Bash(flutter run:*)",
       "Bash(flutter build:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(mkdir:*)",
+      "Bash(timeout:*)",
+      "Bash(move:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []

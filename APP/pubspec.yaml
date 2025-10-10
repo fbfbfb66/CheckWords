@@ -50,6 +50,7 @@ dependencies:
 
   # SQLite数据库
   sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
 
   # 音频播放
   audioplayers: ^6.0.0
@@ -78,8 +79,9 @@ flutter:
   generate: true
 
   assets:
-    - assets/images/
-    - assets/data/
+    - assets/data/main.db
+    - assets/data/db/
+    - assets/data/json/
     - lib/l10n/arb/
 
   fonts:

@@ -708,3 +708,5 @@ type 1 为英音 2 为美音
 **创建日期**：2025-10-10
 **作者**：Claude Assistant
 **最后更新**：2025-10-10
+
+你当前可以看到assets\data里的数据有.json和db文件和main.db。json只有通过process_cet4_data.py生成db文件的作用。数据导入主要是db。每个单词都有严格的json格式和bookid，当前的数据源的单词都是cet4。但是我还会放入新的json文件，生成新的db文件。新的json文件的单词的格式会和当前的cet4的json格式相同,但是bookid是不同的。所以我并不想把他们合在同一个db里，因为之后我还要添加分类背单词功能。因此当前的process_cet4_data.py需要修改的具有普适性，生成的db的名字要跟随json,由于每个json的bookid不同，所以脚本也要做出相应变化。当前的数据库导入是只能导入一个db文件，我需要一个总db文件，也就是说新加的json数据，会生成一个db文件放入assets\data\db，并把新的db数据放进assets\data下main.db中。由于新的数据，也就是新json里会有和老数据相同的单词，虽然bookid不同，但是单词相同，所以脚本导入新数据到main.db的时候要去重。特别注意，脚本应该要先根据新json生成一份db文件放入assets\data\db中，这里不用去重，单词要一个不少，但是把数据加入mian.db中就要注意去重了。数据的导入只和main.db这一个文件有关。所以你要对脚本进行修改，重命名。然后确保数据库可以接收到main.db的新数据。确保导入新数据后app里debug显示导入成功，导入单词个数准确正常。

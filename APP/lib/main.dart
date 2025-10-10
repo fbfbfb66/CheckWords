@@ -17,7 +17,16 @@ Future<void> main() async {
   final database = await AppDatabase.initialize();
 
   try {
-    await DataImportService.importWordsData(database);
+    // 🧹 先检查并清洗数据库
+    print('🧹 检查数据库是否需要清洗...');
+    await DataImportService.cleanDatabase(database);
+
+    // 等待清洗完成后再导入数据
+    await Future.delayed(const Duration(seconds: 1));
+
+    // 🔄 强制完全重置并重新导入，确保数据完整性
+    print('🔄 强制完全重置数据库以确保数据完整性...');
+    await DataImportService.fullReset(database);
 
     // 数据导入完成后检查状态
     print('🔍 开始检查数据库状态...');
@@ -26,13 +35,30 @@ Future<void> main() async {
     );
 
     // 延迟检查，确保导入完成
-    Timer(const Duration(seconds: 2), () async {
+    Timer(const Duration(seconds: 5), () async {
       try {
         final status = await container.read(databaseStatusProvider.future);
         if (status.totalWords > 0) {
           print('✅ 数据导入成功！');
           print('   总单词数: ${status.totalWords}');
           print('   有音标的单词数: ${status.wordsWithPronunciation}');
+          print('   样本单词: ${status.sampleWords.take(5).join(', ')}');
+
+          // 测试一些常见CET4单词是否都能搜索到
+          final testWords = ['access', 'accident', 'accidentally', 'accompany', 'accomplish', 'accord', 'account', 'accumulate', 'accurate', 'accuse'];
+          print('🧪 测试常见CET4单词搜索:');
+          for (final word in testWords) {
+            try {
+              final wordResult = await container.read(wordByNameProvider(word).future);
+              if (wordResult != null) {
+                print('   ✅ $word - 找到 (ID: ${wordResult.id})');
+              } else {
+                print('   ❌ $word - 未找到');
+              }
+            } catch (e) {
+              print('   ❌ $word - 搜索出错: $e');
+            }
+          }
         } else {
           print('❌ 数据导入失败，单词数为0');
         }

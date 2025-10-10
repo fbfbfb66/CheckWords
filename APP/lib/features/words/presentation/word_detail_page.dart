@@ -51,29 +51,11 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     // 监听 locale 变化以确保页面在语言切换时重建
     ref.watch(localeNotifierProvider);
 
-    // 添加调试信息
-    if (kDebugMode) {
-      print('🔍 构建WordDetailPage, wordId: ${widget.wordId}');
-      print('🔍 wordAsync状态: ${wordAsync.runtimeType}');
-      wordAsync.when(
-        data: (word) => print('🔍 wordAsync数据: ${word?.headWord}'),
-        loading: () => print('🔍 wordAsync加载中'),
-        error: (error, stack) => print('🔍 wordAsync错误: $error'),
-      );
-    }
-
+  
     return Scaffold(
       appBar: AppBar(
         title: Text(S.current.wordDetail),
-        actions: [
-          if (kDebugMode)
-            IconButton(
-              icon: const Icon(Icons.bug_report),
-              onPressed: () {
-                _debugAccessWord();
-              },
-            ),
-        ],
+        actions: [],
       ),
       body: SafeArea(
         child: wordAsync.when(
@@ -110,13 +92,6 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                   onPressed: () => ref.refresh(wordByIdProvider(widget.wordId)),
                   child: const Text('重试'),
                 ),
-                if (kDebugMode) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '错误详情: ${stackTrace.toString()}',
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                ],
               ],
             ),
           ),
@@ -131,40 +106,20 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     return Builder(
       builder: (context) {
         try {
-          // 添加详细的调试信息
-          if (kDebugMode) {
-            print('🔍 _buildSafeWordContent 开始构建: ${word.headWord}');
-            print('   - ID: ${word.id}');
-            print('   - wordId: ${word.wordId}');
-            print('   - bookId: ${word.bookId}');
-            print('   - wordRank: ${word.wordRank}');
-            print('   - headWord: ${word.headWord}');
-            print('   - usphone: ${word.usphone}');
-            print('   - ukphone: ${word.ukphone}');
-            print('   - trans数量: ${word.trans.length}');
-            print('   - sentences数量: ${word.sentences.length}');
-            print('   - phrases数量: ${word.phrases.length}');
-          }
-
+          
           // 验证基本数据
           if (word.headWord == null || word.headWord.isEmpty) {
-            print('❌ headWord验证失败: ${word.headWord}');
             return _buildErrorWidget('单词数据无效', 'headWord为空或null');
           }
 
           // 验证必要的数据完整性
           if (!_validateWordData(word)) {
-            print('❌ 单词数据验证失败，使用简化版本');
             return _buildFallbackWordContent(word);
           }
 
           // 直接构建内容，避免复杂的异步渲染问题
           return _buildWordContent(word);
         } catch (e, stackTrace) {
-          print('❌ 构建单词内容时出错: $e');
-          if (kDebugMode) {
-            print('堆栈跟踪: $stackTrace');
-          }
 
           // 显示用户友好的错误信息
           if (mounted) {
@@ -211,7 +166,6 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
 
       return true;
     } catch (e) {
-      print('❌ 数据验证过程出错: $e');
       return false;
     }
   }
@@ -433,104 +387,111 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     // 只显示前2个释义作为核心信息
     final mainTrans = word.trans.take(2).toList();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spacingLarge),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '词性释义',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+    return Container(
+      width: 380, // 固定Card宽度
+      constraints: const BoxConstraints(
+        minWidth: 300, // 最小宽度
+        maxWidth: 400, // 最大宽度
+      ),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(DesignTokens.spacingLarge),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // 高度自适应
+            children: [
+              Text(
+                '词性释义',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: DesignTokens.spacingMedium),
-            ...mainTrans.asMap().entries.map((entry) {
-              final index = entry.key;
-              final trans = entry.value;
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index < mainTrans.length - 1 ? DesignTokens.spacingMedium : 0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(trans.pos),
-                    ),
-                    const SizedBox(height: DesignTokens.spacingSmall),
-                    Text(
-                      trans.tranCn,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    if (trans.tranOther != null && trans.tranOther!.isNotEmpty) ...[
-                      const SizedBox(height: DesignTokens.spacingSmall),
-                      Text(
-                        trans.tranOther!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-
-            // 如果有更多释义，显示折叠部分
-            if (word.trans.length > 2) ...[
               const SizedBox(height: DesignTokens.spacingMedium),
-              CollapsibleSection(
-                title: '更多释义',
-                count: word.trans.length - 2,
-                icon: Icons.more_horiz,
-                initiallyExpanded: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: word.trans.skip(2).map((trans) => Padding(
-                    padding: const EdgeInsets.only(bottom: DesignTokens.spacingMedium),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(trans.pos),
-                        ),
-                        const SizedBox(height: DesignTokens.spacingSmall),
-                        Text(
-                          trans.tranCn,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        if (trans.tranOther != null && trans.tranOther!.isNotEmpty) ...[
-                          const SizedBox(height: DesignTokens.spacingSmall),
-                          Text(
-                            trans.tranOther!,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ],
+              // 词性释义内容
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // 高度自适应
+                children: [
+                  ...mainTrans.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final trans = entry.value;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index < mainTrans.length - 1 ? DesignTokens.spacingMedium : 0,
+                      ),
+                      child: _buildTransItem(context, trans),
+                    );
+                  }),
+
+                  // 如果有更多释义，显示折叠部分
+                  if (word.trans.length > 2) ...[
+                    const SizedBox(height: DesignTokens.spacingMedium),
+                    CollapsibleSection(
+                      title: '更多释义',
+                      count: word.trans.length - 2,
+                      icon: Icons.more_horiz,
+                      initiallyExpanded: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min, // 高度自适应
+                        children: word.trans.skip(2).map((trans) => Padding(
+                          padding: const EdgeInsets.only(bottom: DesignTokens.spacingMedium),
+                          child: _buildTransItem(context, trans),
+                        )).toList(),
+                      ),
                     ),
-                  )).toList(),
-                ),
+                  ],
+                ],
               ),
             ],
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// 构建单个释义项目（高度自适应）
+  Widget _buildTransItem(BuildContext context, dynamic trans) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // 高度自适应
+      children: [
+        // 词性标签
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            trans.pos,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spacingSmall),
+        // 中文释义 - 高度自适应
+        Text(
+          trans.tranCn,
+          style: Theme.of(context).textTheme.bodyLarge,
+          softWrap: true, // 允许换行
+          maxLines: null, // 不限制行数，高度自适应
+        ),
+        if (trans.tranOther != null && trans.tranOther!.isNotEmpty) ...[
+          const SizedBox(height: DesignTokens.spacingSmall),
+          // 其他释义 - 高度自适应
+          Text(
+            trans.tranOther!,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+            softWrap: true, // 允许换行
+            maxLines: null, // 不限制行数，高度自适应
+          ),
+        ],
+      ],
     );
   }
 
@@ -1165,7 +1126,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                           ),
                           const SizedBox(height: 8),
                         ],
-
+                        const SizedBox(height: 8),
                         Text(
                           '单词详情暂时无法完全显示',
                           style: const TextStyle(color: Colors.orange, fontSize: 12),
@@ -1183,33 +1144,6 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
-                // 调试信息（仅debug模式）
-                if (kDebugMode)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(DesignTokens.spacingSmall),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '调试信息',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          Text('ID: ${word.id}', style: const TextStyle(fontSize: 10)),
-                          Text('WordId: ${word.wordId}', style: const TextStyle(fontSize: 10)),
-                          Text('释义数量: ${word.trans.length}', style: const TextStyle(fontSize: 10)),
-                          Text('例句数量: ${word.sentences.length}', style: const TextStyle(fontSize: 10)),
-                        ],
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -1218,45 +1152,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     );
   }
 
-  /// 调试access单词问题
-  void _debugAccessWord() async {
-    print('🔍 开始调试access单词问题');
-    print('🔍 wordId: ${widget.wordId}');
-
-    try {
-      // 1. 检查wordByIdProvider
-      final wordAsync = ref.read(wordByIdProvider(widget.wordId));
-      print('🔍 wordAsync状态: ${wordAsync.runtimeType}');
-
-      wordAsync.when(
-        data: (word) {
-          print('🔍 wordAsync数据: $word');
-          if (word != null) {
-            print('   - ID: ${word.id}');
-            print('   - headWord: "${word.headWord}"');
-            print('   - headWord长度: ${word.headWord.length}');
-            print('   - usphone: "${word.usphone}"');
-            print('   - ukphone: "${word.ukphone}"');
-            print('   - trans数量: ${word.trans.length}');
-            print('   - sentences数量: ${word.sentences.length}');
-            print('   - phrases数量: ${word.phrases.length}');
-          } else {
-            print('❌ wordAsync数据为null');
-          }
-        },
-        loading: () {
-          print('🔍 wordAsync正在加载');
-        },
-        error: (error, stackTrace) {
-          print('❌ wordAsync错误: $error');
-          print('❌ 堆栈跟踪: $stackTrace');
-        },
-      );
-    } catch (e) {
-      print('❌ 调试过程出错: $e');
-    }
-  }
-
+  
   /// 构建简化的单词头部
   Widget _buildSimpleWordHeader(WordModel word) {
     final BuildContext context = this.context;

@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqlite;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../database/app_database.dart';
 
@@ -15,7 +16,7 @@ class DataImportService {
   static const String _importedKey = 'data_imported';
   static const String _versionKey = 'import_version';
   static const int _currentImportVersion = 11;  // 🚨 升级：强制重新创建数据库结构
-  static const String _assetJsonPath = 'assets/data/cet4_words.db';
+  static const String _assetJsonPath = 'assets/data/main.db';
 
   /// 检查是否需要导入数据
   static Future<bool> needsImport() async {
@@ -330,31 +331,51 @@ class DataImportService {
   static String _generateSearchContent(Map<String, dynamic> wordData) {
     final contentParts = <String>[];
 
-    // 添加单词本身
-    final headWord = _extractHeadWord(wordData);
-    if (headWord.isNotEmpty) {
-      contentParts.add(headWord);
-    }
-
-    // 添加中文释义
-    final transList = _extractTrans(wordData);
-    for (final trans in transList) {
-      if (trans is Map<String, dynamic>) {
-        final tranCn = trans['tranCn'] as String?;
-        if (tranCn != null && tranCn.isNotEmpty) {
-          contentParts.add(tranCn);
-        }
+    try {
+      // 添加单词本身
+      final headWord = wordData['headWord']?.toString() ?? '';
+      if (headWord.isNotEmpty) {
+        contentParts.add(headWord);
       }
-    }
 
-    // 添加例句
-    final sentences = _extractSentences(wordData);
-    for (final sentence in sentences) {
-      if (sentence is Map<String, dynamic>) {
-        final sContent = sentence['sContent'] as String?;
-        final sCn = sentence['sCn'] as String?;
-        if (sContent != null && sContent.isNotEmpty) contentParts.add(sContent);
-        if (sCn != null && sCn.isNotEmpty) contentParts.add(sCn);
+      // 解析释义JSON并添加中文释义
+      final transJson = wordData['trans']?.toString() ?? '[]';
+      try {
+        final transList = json.decode(transJson) as List<dynamic>;
+        for (final trans in transList) {
+          if (trans is Map<String, dynamic>) {
+            final tranCn = trans['tranCn']?.toString() ?? '';
+            if (tranCn.isNotEmpty) {
+              contentParts.add(tranCn);
+            }
+          }
+        }
+      } catch (e) {
+        print('[DataImport] 解析释义JSON失败: $e');
+      }
+
+      // 解析例句JSON并添加例句内容
+      final sentencesJson = wordData['sentences']?.toString() ?? '[]';
+      try {
+        final sentencesList = json.decode(sentencesJson) as List<dynamic>;
+        for (final sentence in sentencesList) {
+          if (sentence is Map<String, dynamic>) {
+            final sContent = sentence['sContent']?.toString() ?? '';
+            final sCn = sentence['sCn']?.toString() ?? '';
+            if (sContent.isNotEmpty) contentParts.add(sContent);
+            if (sCn.isNotEmpty) contentParts.add(sCn);
+          }
+        }
+      } catch (e) {
+        print('[DataImport] 解析例句JSON失败: $e');
+      }
+
+    } catch (e) {
+      print('[DataImport] 生成搜索内容失败: $e');
+      // 至少返回单词本身
+      final headWord = wordData['headWord']?.toString() ?? '';
+      if (headWord.isNotEmpty) {
+        contentParts.add(headWord);
       }
     }
 
@@ -398,18 +419,100 @@ class DataImportService {
   static Future<bool> forceReimport(AppDatabase database) async {
     try {
       print('[DataImport] 开始强制重新导入...');
-      
+
       // 清空现有数据
       await database.customStatement('DELETE FROM words_table');
-      
+      await database.customStatement('DELETE FROM words_fts');
+
       // 重置导入标记
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_importedKey, false);
-      
+      await prefs.setInt(_versionKey, _currentImportVersion - 1); // 强制触发版本升级
+
       // 重新导入
       return await importWordsData(database);
     } catch (e) {
       print('[DataImport] 强制重新导入失败: $e');
+      return false;
+    }
+  }
+
+  /// 清洗数据库：删除CET6垃圾数据
+  static Future<bool> cleanDatabase(AppDatabase database) async {
+    try {
+      print('🧹 开始清洗数据库...');
+
+      // 1. 检查当前数据状态
+      final totalCount = await database.customSelect('SELECT COUNT(*) as count FROM words_table').getSingle();
+      print('   清洗前总词汇数: ${totalCount.data['count']}');
+
+      // 2. 检查CET6数据
+      final cet6Count = await database.customSelect('''
+        SELECT COUNT(*) as count FROM words_table
+        WHERE book_id LIKE '%cet6%' OR book_id LIKE '%CET6%'
+      ''').getSingle();
+      final cet6Data = cet6Count.data['count'] as int;
+
+      if (cet6Data > 0) {
+        print('   发现 $cet6Data 条CET6数据，开始清理...');
+
+        // 3. 删除CET6数据
+        await database.customStatement('DELETE FROM words_table WHERE book_id LIKE \'%cet6%\' OR book_id LIKE \'%CET6%\'');
+
+        // 4. 清理FTS索引
+        await database.customStatement('DELETE FROM words_fts');
+
+        // 5. 重建FTS索引
+        await database.customStatement('''
+          INSERT INTO words_fts(rowid, head_word, word_id, search_content)
+          SELECT id, head_word, word_id, search_content FROM words_table
+        ''');
+
+        // 6. 检查清理结果
+        final afterCount = await database.customSelect('SELECT COUNT(*) as count FROM words_table').getSingle();
+        final cleanedCount = (totalCount.data['count'] as int) - (afterCount.data['count'] as int);
+
+        print('   ✅ 清洗完成！删除了 $cleanedCount 条垃圾数据');
+        print('   清洗后总词汇数: ${afterCount.data['count']}');
+
+        // 7. 重置导入标记，强制重新导入
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_importedKey, false);
+        await prefs.setInt(_versionKey, _currentImportVersion - 1);
+
+        return true;
+      } else {
+        print('   ✅ 未发现CET6垃圾数据，数据库已干净');
+        return true;
+      }
+
+    } catch (e) {
+      print('[DataImport] 数据库清洗失败: $e');
+      return false;
+    }
+  }
+
+  /// 完全重置数据库：清空所有数据并重新导入
+  static Future<bool> fullReset(AppDatabase database) async {
+    try {
+      print('🔄 开始完全重置数据库...');
+
+      // 1. 清空所有数据
+      await database.customStatement('DELETE FROM words_table');
+      await database.customStatement('DELETE FROM words_fts');
+
+      // 2. 重置导入标记
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_importedKey, false);
+      await prefs.setInt(_versionKey, _currentImportVersion - 1);
+
+      print('   ✅ 数据库已完全重置');
+
+      // 3. 重新导入
+      return await importWordsData(database);
+
+    } catch (e) {
+      print('[DataImport] 数据库重置失败: $e');
       return false;
     }
   }
@@ -457,8 +560,14 @@ class DataImportService {
   /// 从assets复制数据库文件到临时目录
   static Future<String?> _copyDatabaseFromAssets() async {
     try {
+      // 🚨 修复：在Windows平台初始化databaseFactory
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+      }
+
       // 从assets读取数据库文件
-      final byteData = await rootBundle.load('assets/data/cet4_words.db');
+      final byteData = await rootBundle.load('assets/data/main.db');
       final bytes = byteData.buffer.asUint8List();
 
       // 创建临时目录
