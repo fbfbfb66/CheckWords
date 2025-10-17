@@ -13,7 +13,15 @@
       "Bash(mkdir:*)",
       "Bash(timeout:*)",
       "Bash(move:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git commit:*)",
+      "Bash(del:*)",
+      "Bash(set:*)",
+      "Bash(flutter doctor:*)",
+      "Bash(flutter:*)",
+      "Bash(.gradlew:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

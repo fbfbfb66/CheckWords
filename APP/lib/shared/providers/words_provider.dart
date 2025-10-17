@@ -17,12 +17,12 @@ Future<WordModel?> wordById(WordByIdRef ref, int wordId) async {
     final result = await query.getSingleOrNull();
 
     if (result == null) {
-      print('❌ 未找到单词ID: $wordId');
+      print('⚠️ 未找到单词ID: $wordId');
       return null;
     }
 
     if (result.headWord.isEmpty) {
-      print('❌ 单词记录无效: headWord为空 (ID: $wordId)');
+      print('⚠️ 单词记录无效: headWord为空 (ID: $wordId)');
       return null;
     }
 
@@ -49,9 +49,9 @@ Future<WordModel?> wordById(WordByIdRef ref, int wordId) async {
     return wordModel;
 
   } catch (e, stackTrace) {
-    print('❌ 获取单词详情失败: $e');
-    print('❌ 堆栈跟踪: $stackTrace');
-    print('❌ 单词ID: $wordId');
+    print('⚠️ 获取单词详情失败: $e');
+    print('⚠️ 堆栈跟踪: $stackTrace');
+    print('⚠️ 单词ID: $wordId');
 
     // 尝试创建一个基本的WordModel作为fallback
     try {
@@ -60,7 +60,7 @@ Future<WordModel?> wordById(WordByIdRef ref, int wordId) async {
       final result = await query.getSingleOrNull();
 
       if (result != null && result.headWord.isNotEmpty) {
-        print('🔄 尝试创建fallback WordModel');
+        print('🔧 尝试创建fallback WordModel');
         return WordModel(
           id: result.id,
           wordId: result.wordId,
@@ -80,7 +80,7 @@ Future<WordModel?> wordById(WordByIdRef ref, int wordId) async {
         );
       }
     } catch (fallbackError) {
-      print('❌ Fallback也失败了: $fallbackError');
+      print('⚠️ Fallback也失败了: $fallbackError');
     }
 
     return null;
@@ -140,7 +140,7 @@ Future<DatabaseStatus> databaseStatus(DatabaseStatusRef ref) async {
       sampleWords: sampleWordList,
     );
   } catch (e) {
-    print('❌ 检查数据库状态失败: $e');
+    print('⚠️ 检查数据库状态失败: $e');
     return DatabaseStatus(
       totalWords: 0,
       wordsWithPronunciation: 0,
@@ -171,14 +171,14 @@ Future<WordModel?> wordByName(WordByNameRef ref, String word) async {
   final database = ref.watch(databaseProvider);
 
   try {
-    print('🔍 开始根据单词名称获取详情: $word');
+    print('🔍 开始根据单词名称获取目标: $word');
     final query = database.select(database.wordsTable)
       ..where((tbl) => tbl.headWord.equals(word));
 
     final result = await query.getSingleOrNull();
 
     if (result == null) {
-      print('❌ 数据库中未找到单词: $word');
+      print('⚠️ 数据库中未找到单词: $word');
       return null;
     }
 
@@ -273,6 +273,54 @@ Future<List<WordModel>> searchWords(SearchWordsRef ref, String query,
   }
 }
 
+/// 精确搜索单词（点击搜索按钮后使用）
+@riverpod
+Future<WordModel?> exactSearchWords(ExactSearchWordsRef ref, String query) async {
+  final database = ref.watch(databaseProvider);
+
+  final trimmedQuery = query.trim();
+  if (trimmedQuery.isEmpty) {
+    return null;
+  }
+
+  try {
+    print('🎯 [精确搜索] 查询完全匹配的单词: "$trimmedQuery"');
+
+    final queryResult = database.select(database.wordsTable)
+      ..where((tbl) => tbl.headWord.equals(trimmedQuery.toLowerCase()));
+
+    final result = await queryResult.getSingleOrNull();
+
+    if (result == null) {
+      print('🎯 [精确搜索] 未找到完全匹配的单词: "$trimmedQuery"');
+      return null;
+    }
+
+    print('🎯 [精确搜索] 找到完全匹配的单词: "${result.headWord}"');
+
+    return WordModel.fromDatabaseRecord({
+      'id': result.id,
+      'wordId': result.wordId,
+      'bookId': result.bookId,
+      'wordRank': result.wordRank,
+      'headWord': result.headWord,
+      'usphone': result.usphone,
+      'ukphone': result.ukphone,
+      'usspeech': result.usspeech,
+      'ukspeech': result.ukspeech,
+      'trans': result.trans,
+      'sentences': result.sentences,
+      'phrases': result.phrases,
+      'synonyms': result.synonyms,
+      'relWords': result.relWords,
+      'exams': result.exams,
+    });
+  } catch (e) {
+    print('精确搜索单词失败: $e');
+    return null;
+  }
+}
+
 /// 模糊搜索单词（用于输入提示）
 @riverpod
 Future<List<WordModel>> fuzzySearchWords(FuzzySearchWordsRef ref, String query,
@@ -345,7 +393,7 @@ Future<List<WordModel>> popularWords(PopularWordsRef ref,
   }
 }
 
-/// 根据等级获取单词
+/// 根据级别获取单词
 @riverpod
 Future<List<WordModel>> wordsByLevel(WordsByLevelRef ref, String level,
     {int limit = 100}) async {
@@ -374,7 +422,7 @@ Future<List<WordModel>> wordsByLevel(WordsByLevelRef ref, String level,
             }))
         .toList();
   } catch (e) {
-    print('根据等级获取单词失败: $e');
+    print('根据级别获取单词失败: $e');
     return [];
   }
 }

@@ -3,25 +3,20 @@ import 'package:drift/drift.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/database_provider.dart';
-import '../../core/database/tables/user_words_table.dart';
 import '../models/word_model.dart';
-import 'auth_provider.dart';
 import 'learning_provider.dart';
 
 part 'favorites_provider.g.dart';
 
-/// 检查单词是否被收藏
+/// 检查单词是否被收藏（全局）
 @riverpod
 Future<bool> isWordFavorited(IsWordFavoritedRef ref, int wordId) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return false;
-
   final database = ref.watch(databaseProvider);
 
   try {
-    final query = database.select(database.userWordsTable)
-      ..where((tbl) => tbl.userId.equals(user.id) & tbl.wordId.equals(wordId));
-    
+    final query = database.select(database.favoritesTable)
+      ..where((tbl) => tbl.wordId.equals(wordId));
+
     final result = await query.getSingleOrNull();
     return result?.isFavorited ?? false;
   } catch (e) {
@@ -39,31 +34,25 @@ class FavoriteToggle extends _$FavoriteToggle {
   }
 
   /// 切换收藏状态
-
   Future<bool> toggle() async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) {
-      throw Exception('\u7528\u6237\u672a\u767b\u5f55');
-    }
-
     final database = ref.read(databaseProvider);
     final currentState = state.valueOrNull ?? false;
     final isFavoriting = !currentState;
 
     try {
       await database.transaction(() async {
-        final existingQuery = database.select(database.userWordsTable)
-          ..where((tbl) => tbl.userId.equals(user.id) & tbl.wordId.equals(wordId));
+        final existingQuery = database.select(database.favoritesTable)
+          ..where((tbl) => tbl.wordId.equals(wordId));
 
         final existing = await existingQuery.getSingleOrNull();
 
         if (existing != null) {
-          await (database.update(database.userWordsTable)
+          await (database.update(database.favoritesTable)
                 ..where((tbl) => tbl.id.equals(existing.id)))
-              .write(UserWordsTableCompanion(
+              .write(FavoritesTableCompanion(
                 isFavorited: Value(isFavoriting),
                 learningStatus: isFavoriting
-                    ? Value(LearningStatus.notLearned.value)
+                    ? Value(0) // 未学习
                     : const Value.absent(),
                 reviewCount: isFavoriting ? const Value(0) : const Value.absent(),
                 correctCount: isFavoriting ? const Value(0) : const Value.absent(),
@@ -75,12 +64,11 @@ class FavoriteToggle extends _$FavoriteToggle {
                 updatedAt: Value(DateTime.now()),
               ));
         } else {
-          await database.into(database.userWordsTable).insert(
-            UserWordsTableCompanion.insert(
-              userId: user.id,
+          await database.into(database.favoritesTable).insert(
+            FavoritesTableCompanion.insert(
               wordId: wordId,
               isFavorited: Value(isFavoriting),
-              learningStatus: Value(LearningStatus.notLearned.value),
+              learningStatus: Value(0), // 未学习
             ),
           );
         }
@@ -96,19 +84,16 @@ class FavoriteToggle extends _$FavoriteToggle {
 
       return newState;
     } catch (e) {
-      print('\u5207\u6362\u6536\u85cf\u72b6\u6001\u5931\u8d25: $e');
-      throw Exception('\u64cd\u4f5c\u5931\u8d25: $e');
+      print('切换收藏状态失败: $e');
+      throw Exception('操作失败: $e');
     }
   }
 
 }
 
-/// 获取用户收藏的单词列表
+/// 获取收藏的单词列表（全局）
 @riverpod
 Future<List<WordModel>> favoriteWords(FavoriteWordsRef ref, {int limit = 100}) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return [];
-
   final database = ref.watch(databaseProvider);
 
   try {
@@ -116,16 +101,15 @@ Future<List<WordModel>> favoriteWords(FavoriteWordsRef ref, {int limit = 100}) a
     final results = await database.customSelect(
       '''
       SELECT w.* FROM words_table w
-      INNER JOIN user_words_table uw ON w.id = uw.word_id
-      WHERE uw.user_id = ? AND uw.is_favorited = 1
-      ORDER BY uw.updated_at DESC
+      INNER JOIN favorites_table f ON w.id = f.word_id
+      WHERE f.is_favorited = 1
+      ORDER BY f.updated_at DESC
       LIMIT ?
       ''',
       variables: [
-        Variable.withString(user.id),
         Variable.withInt(limit),
       ],
-      readsFrom: {database.wordsTable, database.userWordsTable},
+      readsFrom: {database.wordsTable, database.favoritesTable},
     ).get();
 
     return results.map((result) => WordModel.fromDatabaseRecord({
@@ -149,119 +133,21 @@ Future<List<WordModel>> favoriteWords(FavoriteWordsRef ref, {int limit = 100}) a
   }
 }
 
-/// 获取收藏数量
+/// 获取收藏数量（全局）
 @riverpod
 Future<int> favoriteWordsCount(FavoriteWordsCountRef ref) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return 0;
-
   final database = ref.watch(databaseProvider);
 
   try {
-    final query = database.selectOnly(database.userWordsTable)
-      ..addColumns([database.userWordsTable.id.count()])
-      ..where(database.userWordsTable.userId.equals(user.id) & 
-              database.userWordsTable.isFavorited.equals(true));
-    
+    final query = database.selectOnly(database.favoritesTable)
+      ..addColumns([database.favoritesTable.id.count()])
+      ..where(database.favoritesTable.isFavorited.equals(true));
+
     final result = await query.getSingle();
-    return result.read(database.userWordsTable.id.count()) ?? 0;
+    return result.read(database.favoritesTable.id.count()) ?? 0;
   } catch (e) {
     print('获取收藏数量失败: $e');
     return 0;
   }
 }
 
-/// 批量操作收藏
-@riverpod
-class BatchFavoriteOperations extends _$BatchFavoriteOperations {
-  @override
-  Future<void> build() async {
-    // 不需要初始状态
-  }
-
-  /// 批量添加收藏
-  Future<void> addMultipleFavorites(List<int> wordIds) async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) {
-      throw Exception('用户未登录');
-    }
-
-    final database = ref.read(databaseProvider);
-
-    try {
-      await database.transaction(() async {
-        for (final wordId in wordIds) {
-          await database.into(database.userWordsTable).insertOnConflictUpdate(
-            UserWordsTableCompanion.insert(
-              userId: user.id,
-              wordId: wordId,
-              isFavorited: const Value(true),
-            ),
-          );
-        }
-      });
-
-      // 使相关provider失效
-      ref.invalidate(favoriteWordsProvider);
-      ref.invalidate(favoriteWordsCountProvider);
-    } catch (e) {
-      print('批量添加收藏失败: $e');
-      throw Exception('批量操作失败: $e');
-    }
-  }
-
-  /// 批量移除收藏
-  Future<void> removeMultipleFavorites(List<int> wordIds) async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) {
-      throw Exception('用户未登录');
-    }
-
-    final database = ref.read(databaseProvider);
-
-    try {
-      await database.transaction(() async {
-        await (database.update(database.userWordsTable)
-              ..where((tbl) => tbl.userId.equals(user.id) & 
-                              tbl.wordId.isIn(wordIds)))
-            .write(const UserWordsTableCompanion(
-              isFavorited: Value(false),
-              updatedAt: Value.absentIfNull(null),
-            ));
-      });
-
-      // 使相关provider失效
-      ref.invalidate(favoriteWordsProvider);
-      ref.invalidate(favoriteWordsCountProvider);
-    } catch (e) {
-      print('批量移除收藏失败: $e');
-      throw Exception('批量操作失败: $e');
-    }
-  }
-
-  /// 清空所有收藏
-  Future<void> clearAllFavorites() async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) {
-      throw Exception('用户未登录');
-    }
-
-    final database = ref.read(databaseProvider);
-
-    try {
-      await (database.update(database.userWordsTable)
-            ..where((tbl) => tbl.userId.equals(user.id)))
-          .write(const UserWordsTableCompanion(
-            isFavorited: Value(false),
-            updatedAt: Value.absentIfNull(null),
-          ));
-
-      // 使相关provider失效
-      ref.invalidate(favoriteWordsProvider);
-      ref.invalidate(favoriteWordsCountProvider);
-    } catch (e) {
-      print('清空收藏失败: $e');
-      throw Exception('清空失败: $e');
-    }
-  }
-}

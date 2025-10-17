@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../utils/app_logger.dart';
+
 part 'word_model.freezed.dart';
 part 'word_model.g.dart';
 

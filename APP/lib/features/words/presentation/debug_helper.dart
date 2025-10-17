@@ -2,47 +2,62 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 import '../../../core/database/database_provider.dart';
 import '../../../core/services/data_import_service.dart';
+import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/models/user_model.dart';
 
 /// 简单的调试助手
 class DebugHelper {
   /// 显示快速诊断对话框
   static void showQuickDiagnosis(BuildContext context, WidgetRef ref) {
     final database = ref.read(databaseProvider);
-    
+    final authState = ref.read(userNotifierProvider);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('数据库诊断'),
+        title: const Text('应用诊断'),
         content: SizedBox(
-          height: 150,
+          height: 300,
+          width: 400,
           child: FutureBuilder<Map<String, dynamic>>(
-            future: _checkDatabase(database),
+            future: _checkAppStatus(database, ref),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               if (snapshot.hasError) {
                 return Text('错误: ${snapshot.error}');
               }
-              
+
               final data = snapshot.data!;
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatusItem('数据库状态', data['status'] ?? '未知'),
-                    _buildStatusItem('单词总数', '${data['count'] ?? 0}'),
+                    const Text('数据库状态:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    _buildStatusItem('单词总数', '${data['word_count'] ?? 0}'),
                     _buildStatusItem('样本单词', data['samples'] ?? '无'),
                     if (data['found_common'] != null)
                       _buildStatusItem('找到常用词', data['found_common'], isGood: true),
                     if (data['missing_common'] != null)
                       _buildStatusItem('常用词状态', data['missing_common'], isError: true),
-                    if (data['import_flag'] != null)
-                      _buildStatusItem('数据导入', data['import_flag']),
+
+                    const SizedBox(height: 16),
+                    const Text('用户认证状态:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    _buildStatusItem('登录状态', data['auth_status'] ?? '未知'),
+                    _buildStatusItem('用户数', '${data['user_count'] ?? 0}'),
+                    if (data['current_user'] != null)
+                      _buildStatusItem('当前用户', data['current_user'], isGood: true),
+                    if (data['auth_error'] != null)
+                      _buildStatusItem('认证错误', data['auth_error'], isError: true),
+
                     if (data['warning'] != null)
                       _buildStatusItem('警告', data['warning'], isError: true),
                     if (data['error'] != null)
@@ -58,64 +73,79 @@ class DebugHelper {
             onPressed: () => Navigator.pop(context),
             child: const Text('关闭'),
           ),
-          ElevatedButton(
-            onPressed: () => _forceReimportData(context, database),
-            child: const Text('重新导入数据'),
-          ),
-          ElevatedButton(
-            onPressed: () => _forceFixDatabase(context, database),
-            child: const Text('修复搜索'),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetDeviceUser(context, ref);
+            },
+            child: const Text('重置设备用户'),
           ),
         ],
       ),
     );
   }
 
-  /// 检查数据库状态
-  static Future<Map<String, dynamic>> _checkDatabase(database) async {
+  /// 检查应用状态
+  static Future<Map<String, dynamic>> _checkAppStatus(database, WidgetRef ref) async {
     final results = <String, dynamic>{};
-    
+
     try {
-      // 检查数据总数
-      final countResult = await database.customSelect(
+      // 检查单词数据总数
+      final wordCountResult = await database.customSelect(
         'SELECT COUNT(*) as count FROM words_table',
       ).getSingle();
-      
-      final count = countResult.data['count'] as int;
-      results['count'] = count;
-      results['status'] = count > 0 ? '✓ 正常' : '✗ 无数据';
 
-      // 获取样本 - 查找真正的英文单词
-      if (count > 0) {
-        // 查找以字母开头的单词（简单方式）
-        final englishWords = await database.customSelect(
-          "SELECT head_word FROM words_table WHERE head_word >= 'a' AND head_word < 'z' AND LENGTH(head_word) > 1 ORDER BY head_word LIMIT 5",
+      final wordCount = wordCountResult.data['count'] as int;
+      results['word_count'] = wordCount;
+
+      // 获取单词样本
+      if (wordCount > 0) {
+        final samples = await database.customSelect(
+          'SELECT head_word FROM words_table ORDER BY head_word LIMIT 5',
         ).get();
+        results['samples'] = samples.map((r) => r.data['head_word']).join(', ');
+      } else {
+        results['samples'] = '无数据';
+      }
 
-        if (englishWords.isNotEmpty) {
-          results['samples'] = englishWords.map((r) => r.data['head_word']).join(', ');
-        } else {
-          // 尝试查找任何包含字母的单词
-          final anyWords = await database.customSelect(
-            "SELECT head_word FROM words_table WHERE head_word LIKE '%a%' OR head_word LIKE '%e%' OR head_word LIKE '%i%' ORDER BY head_word LIMIT 5",
-          ).get();
+      // 检查用户数据
+      final userCountResult = await database.customSelect(
+        'SELECT COUNT(*) as count FROM users_table',
+      ).getSingle();
 
-          if (anyWords.isNotEmpty) {
-            results['samples'] = anyWords.map((r) => r.data['head_word']).join(', ');
-          } else {
-            // 如果都没有，显示前几个单词
-            final samples = await database.customSelect(
-              'SELECT head_word FROM words_table ORDER BY head_word LIMIT 5',
-            ).get();
-            results['samples'] = samples.map((r) => r.data['head_word']).join(', ');
-            results['warning'] = '⚠️ 数据质量问题：多为数字/符号';
-          }
-        }
+      final userCount = userCountResult.data['count'] as int;
+      results['user_count'] = userCount;
 
-        // 检查一些常见英文单词是否存在
+      // 检查认证状态
+      try {
+        final authState = ref.read(userNotifierProvider);
+        authState.when(
+          data: (state) {
+            if (state.hasUser && state.isValid) {
+              results['auth_status'] = '✓ 已登录';
+              results['current_user'] = state.user?.name ?? '未知用户';
+            } else {
+              results['auth_status'] = '✗ 未登录';
+              if (!state.hasUser) {
+                results['auth_error'] = '用户未登录';
+              } else if (!state.isValid) {
+                results['auth_error'] = '用户状态无效';
+              }
+            }
+          },
+          loading: () => results['auth_status'] = '加载中...',
+          error: (error, stack) => results['auth_error'] = error.toString(),
+        );
+      } catch (e) {
+        results['auth_error'] = e.toString();
+        results['auth_status'] = '✗ 异常';
+      }
+
+      // 检查一些常见英文单词是否存在
+      if (wordCount > 0) {
         final commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'hello', 'world', 'apple'];
         final foundWords = <String>[];
-        
+
         for (final word in commonWords) {
           final found = await database.customSelect(
             'SELECT head_word FROM words_table WHERE head_word = ? LIMIT 1',
@@ -125,29 +155,48 @@ class DebugHelper {
             foundWords.add(word);
           }
         }
-        
+
         if (foundWords.isNotEmpty) {
           results['found_common'] = foundWords.join(', ');
         } else {
           results['missing_common'] = '⚠️ 常用单词缺失 - 可能需要重新导入数据';
-          
-          // 检查数据导入状态
-          try {
-            final prefs = await SharedPreferences.getInstance();
-            final isMarkedAsImported = prefs.getBool('data_imported') ?? false;
-            results['import_flag'] = '导入标记: ${isMarkedAsImported ? "已标记" : "未标记"}';
-          } catch (e) {
-            results['import_flag'] = '导入标记检查失败: $e';
-          }
         }
+      }
+
+      if (userCount == 0) {
+        results['warning'] = '⚠️ 没有用户数据，无法测试登录功能';
       }
 
     } catch (e) {
       results['error'] = e.toString();
-      results['status'] = '✗ 异常';
     }
-    
+
     return results;
+  }
+
+  /// 重置设备用户
+  static Future<void> _resetDeviceUser(BuildContext context, WidgetRef ref) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      await ref.read(userNotifierProvider.notifier).resetUser();
+
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('设备用户已重置'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('重置失败: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   /// 构建状态项
@@ -165,7 +214,7 @@ class DebugHelper {
             child: Text(
               value,
               style: TextStyle(
-                color: isError ? Colors.red : 
+                color: isError ? Colors.red :
                        isGood ? Colors.green :
                        value.contains('✗') ? Colors.red :
                        value.contains('✓') ? Colors.green :
@@ -178,195 +227,4 @@ class DebugHelper {
     );
   }
 
-  /// 强制重新导入数据
-  static void _forceReimportData(BuildContext context, database) async {
-    Navigator.pop(context); // 关闭当前对话框
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        title: Text('正在重新导入数据'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('清空现有数据并重新导入单词库...\n这可能需要1-2分钟，请稍候'),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      // 使用DataImportService强制重新导入
-      final success = await DataImportService.forceReimport(database);
-      
-      Navigator.pop(context); // 关闭进度对话框
-      
-      // 显示导入结果
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(success ? '导入成功' : '导入失败'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(success 
-                ? '✅ 数据重新导入成功！\n🔍 搜索功能已恢复\n📊 所有单词数据已更新' 
-                : '❌ 数据导入失败\n请检查assets/data/json/words_seed.json文件\n或重启应用后再试'),
-              if (success) const SizedBox(height: 16),
-              if (success) const Text('现在可以正常搜索单词了！', 
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      );
-      
-    } catch (e) {
-      Navigator.pop(context); // 关闭进度对话框
-      
-      // 显示错误信息
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('导入失败'),
-          content: Text('导入过程中出现错误: $e\n\n请重启应用后再试'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      );
-    }
   }
-
-  /// 强制修复数据库 - 简化版本
-  static void _forceFixDatabase(BuildContext context, database) async {
-    Navigator.pop(context); // 关闭当前对话框
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        title: Text('正在修复数据库'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('使用简化方案，约5-10秒...'),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      // 重建FTS5索引而不是删除
-      await database.customStatement('DROP TABLE IF EXISTS words_fts');
-      
-      // 重新创建FTS5表
-      await database.customStatement('''
-        CREATE VIRTUAL TABLE words_fts USING fts5(
-          head_word,
-          word_id,
-          search_content
-        );
-      ''');
-
-      // 重新创建触发器保持FTS表同步
-      await database.customStatement('''
-        CREATE TRIGGER words_fts_insert AFTER INSERT ON words_table BEGIN
-          INSERT INTO words_fts(rowid, head_word, word_id, search_content)
-          VALUES (new.id, new.head_word, new.word_id, new.search_content);
-        END;
-      ''');
-
-      await database.customStatement('''
-        CREATE TRIGGER words_fts_delete AFTER DELETE ON words_table BEGIN
-          DELETE FROM words_fts WHERE rowid = old.id;
-        END;
-      ''');
-
-      await database.customStatement('''
-        CREATE TRIGGER words_fts_update AFTER UPDATE ON words_table BEGIN
-          DELETE FROM words_fts WHERE rowid = old.id;
-          INSERT INTO words_fts(rowid, head_word, word_id, search_content)
-          VALUES (new.id, new.head_word, new.word_id, new.search_content);
-        END;
-      ''');
-
-      // 同步数据到FTS5表
-      await database.customStatement('''
-        INSERT INTO words_fts(rowid, head_word, word_id, search_content)
-        SELECT id, head_word, word_id, search_content FROM words_table
-      ''');
-
-      // 测试FTS5搜索是否工作
-      final testResult = await database.customSelect(
-        '''
-        SELECT w.head_word FROM words_table w
-        INNER JOIN words_fts fts ON w.id = fts.rowid
-        WHERE words_fts MATCH ?
-        LIMIT 1
-        ''',
-        variables: [drift.Variable.withString('hello')],
-      ).get();
-
-      Navigator.pop(context); // 关闭进度对话框
-      
-      // 显示修复结果
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('修复完成'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('✅ 已重建FTS5全文搜索索引'),
-              const Text('🚀 已同步所有单词数据'),
-              Text('🧪 测试FTS5搜索"hello": ${testResult.isNotEmpty ? '✅ 成功' : '❌ 失败'}'),
-              const SizedBox(height: 16),
-              const Text('搜索功能已修复，现在应该能正常工作了！', 
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      );
-      
-    } catch (e) {
-      Navigator.pop(context); // 关闭进度对话框
-      
-      // 显示错误信息
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('修复失败'),
-          content: Text('错误: $e\n\n请重启应用后再试'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-}

@@ -6,9 +6,11 @@ part of 'learning_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$learningSessionHash() => r'8b1acc3f559550ebc6746a1f253af5c0c0e75dd9';
+String _$learningSessionHash() => r'7da8585e40b91e515a0160565aacab997d43a39d';
 
-/// See also [LearningSession].
+/// 学习会话（全局）
+///
+/// Copied from [LearningSession].
 @ProviderFor(LearningSession)
 final learningSessionProvider =
     AutoDisposeNotifierProvider<LearningSession, LearningSessionState>.internal(

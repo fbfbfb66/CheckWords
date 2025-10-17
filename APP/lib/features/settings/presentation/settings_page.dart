@@ -421,7 +421,7 @@ class SettingsPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(S.current.clearData),
-        content: const Text('此操作将清除所有本地数据，包括收藏的单词、学习记录等，且无法恢复。确定要继续吗？'),
+        content: Text(S.current.clearDataWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

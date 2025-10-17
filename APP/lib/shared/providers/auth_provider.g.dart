@@ -6,7 +6,7 @@ part of 'auth_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentUserHash() => r'26f26ff753f1b524cb07df5bbadfd37fbbfb2e47';
+String _$currentUserHash() => r'5d0e79d899b2ded88c6002632cc1f2a4b6db7fe3';
 
 /// 当前用户
 ///
@@ -22,39 +22,38 @@ final currentUserProvider = AutoDisposeProvider<UserModel?>.internal(
 );
 
 typedef CurrentUserRef = AutoDisposeProviderRef<UserModel?>;
-String _$isAuthenticatedHash() => r'ff8bc75b4a69913b1807bf9bfc7ca8c47c11efd0';
+String _$hasUserHash() => r'd7ec075b5015df9580b9e561cb05c89b972933c8';
 
-/// 是否已认证
+/// 是否有用户
 ///
-/// Copied from [isAuthenticated].
-@ProviderFor(isAuthenticated)
-final isAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
-  isAuthenticated,
-  name: r'isAuthenticatedProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$isAuthenticatedHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef IsAuthenticatedRef = AutoDisposeProviderRef<bool>;
-String _$authNotifierHash() => r'fcc57b91ed8abbcdbf426362dc09c5fbb13dd9ae';
-
-/// 认证服务
-///
-/// Copied from [AuthNotifier].
-@ProviderFor(AuthNotifier)
-final authNotifierProvider =
-    AutoDisposeAsyncNotifierProvider<AuthNotifier, AuthState>.internal(
-  AuthNotifier.new,
-  name: r'authNotifierProvider',
+/// Copied from [hasUser].
+@ProviderFor(hasUser)
+final hasUserProvider = AutoDisposeProvider<bool>.internal(
+  hasUser,
+  name: r'hasUserProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$authNotifierHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$hasUserHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AuthNotifier = AutoDisposeAsyncNotifier<AuthState>;
+typedef HasUserRef = AutoDisposeProviderRef<bool>;
+String _$userNotifierHash() => r'ac22c84ff21ec3d9d39069b4739d963054759233';
+
+/// 简化的用户服务（极简版）
+///
+/// Copied from [UserNotifier].
+@ProviderFor(UserNotifier)
+final userNotifierProvider =
+    AutoDisposeAsyncNotifierProvider<UserNotifier, UserState>.internal(
+  UserNotifier.new,
+  name: r'userNotifierProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$userNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$UserNotifier = AutoDisposeAsyncNotifier<UserState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

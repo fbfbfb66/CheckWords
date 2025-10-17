@@ -1,91 +1,173 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'app/app.dart';
-import 'shared/providers/locale_provider.dart';
-import 'shared/providers/words_provider.dart';
 import 'core/database/app_database.dart';
 import 'core/services/data_import_service.dart';
 import 'l10n/generated/l10n_simple.dart';
+import 'shared/providers/locale_provider.dart';
+import 'shared/providers/words_provider.dart';
+import 'shared/utils/app_logger.dart';
+import 'shared/utils/permission_helper.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  return runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  final database = await AppDatabase.initialize();
-
-  try {
-    // 🧹 先检查并清洗数据库
-    print('🧹 检查数据库是否需要清洗...');
-    await DataImportService.cleanDatabase(database);
-
-    // 等待清洗完成后再导入数据
-    await Future.delayed(const Duration(seconds: 1));
-
-    // 🔄 强制完全重置并重新导入，确保数据完整性
-    print('🔄 强制完全重置数据库以确保数据完整性...');
-    await DataImportService.fullReset(database);
-
-    // 数据导入完成后检查状态
-    print('🔍 开始检查数据库状态...');
-    final container = ProviderContainer(
-      overrides: [databaseProvider.overrideWithValue(database)],
-    );
-
-    // 延迟检查，确保导入完成
-    Timer(const Duration(seconds: 5), () async {
-      try {
-        final status = await container.read(databaseStatusProvider.future);
-        if (status.totalWords > 0) {
-          print('✅ 数据导入成功！');
-          print('   总单词数: ${status.totalWords}');
-          print('   有音标的单词数: ${status.wordsWithPronunciation}');
-          print('   样本单词: ${status.sampleWords.take(5).join(', ')}');
-
-          // 测试一些常见CET4单词是否都能搜索到
-          final testWords = ['access', 'accident', 'accidentally', 'accompany', 'accomplish', 'accord', 'account', 'accumulate', 'accurate', 'accuse'];
-          print('🧪 测试常见CET4单词搜索:');
-          for (final word in testWords) {
-            try {
-              final wordResult = await container.read(wordByNameProvider(word).future);
-              if (wordResult != null) {
-                print('   ✅ $word - 找到 (ID: ${wordResult.id})');
-              } else {
-                print('   ❌ $word - 未找到');
-              }
-            } catch (e) {
-              print('   ❌ $word - 搜索出错: $e');
-            }
-          }
-        } else {
-          print('❌ 数据导入失败，单词数为0');
-        }
-      } catch (e) {
-        print('❌ 检查数据库状态失败: $e');
+      // 🔐 请求存储权限（真机数据导入必需）
+      print('🔐 [MAIN] 检查存储权限...');
+      final hasPermissions = await PermissionHelper.requestStoragePermissions();
+      if (!hasPermissions) {
+        print('❌ [MAIN] 存储权限被拒绝，数据导入可能失败');
+      } else {
+        print('✅ [MAIN] 存储权限检查通过');
       }
-    });
 
-  } catch (e) {
-    print('词汇数据导入失败: $e');
-  }
+      // 显示权限状态
+      final permissionStatus = await PermissionHelper.getPermissionStatus();
+      print('📋 [MAIN] 权限状态: $permissionStatus');
 
-  final container = ProviderContainer(
-    overrides: [
-      databaseProvider.overrideWithValue(database),
-    ],
-  );
+      final database = await AppDatabase.initialize();
 
-  // 立即初始化语言设置，确保应用启动时语言正确
-  await container.read(localeNotifierProvider.notifier).initialize();
+      try {
+        print('🚀 [MAIN] Starting data import from assets...');
+        print('🚀 [MAIN] Database initialized: ${database.runtimeType}');
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const CheckWordsApp(),
+        // 导入词汇数据
+        final importSuccess = await DataImportService.importWordsData(database);
+        if (importSuccess) {
+          print('✅ [MAIN] Data import completed successfully');
+        } else {
+          print('❌ [MAIN] Data import failed');
+        }
+
+        // 检查导入结果
+        final countResult = await database.customSelect('SELECT COUNT(*) as count FROM words_table').getSingle();
+        final wordCount = countResult.data['count'] as int;
+        print('📊 [MAIN] Total words in database after import: $wordCount');
+
+        print('✅ [MAIN] Data initialization process completed');
+      } catch (error, stackTrace) {
+        print('❌ [MAIN] Initial data preparation failed: $error');
+        AppLogger.error(
+          'Initial data preparation failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(database)],
+      );
+
+      Timer(const Duration(seconds: 5), () async {
+        try {
+          final status = await container.read(databaseStatusProvider.future);
+          if (status.totalWords > 0) {
+            AppLogger.verbose('Word data import succeeded');
+            AppLogger.verbose('Total words: ${status.totalWords}');
+            AppLogger.verbose(
+                'Words with pronunciation: ${status.wordsWithPronunciation}');
+            AppLogger.verbose(
+              'Sample words: ${status.sampleWords.take(5).join(', ')}',
+            );
+
+            const testWords = [
+              'access',
+              'accident',
+              'accidentally',
+              'accompany',
+              'accomplish',
+              'accord',
+              'account',
+              'accumulate',
+              'accurate',
+              'accuse',
+            ];
+            for (final word in testWords) {
+              try {
+                final wordResult =
+                    await container.read(wordByNameProvider(word).future);
+                if (wordResult != null) {
+                  AppLogger.verbose(
+                      'Test word available: $word (ID: ${wordResult.id})');
+                } else {
+                  AppLogger.debug('Test word missing: $word');
+                }
+              } catch (lookupError) {
+                AppLogger.debug(
+                    'Test word lookup failed for $word: $lookupError');
+              }
+            }
+          } else {
+            AppLogger.debug(
+                'Word data import finished but produced zero rows.');
+          }
+        } catch (statusError) {
+          AppLogger.debug('Failed to verify database status: $statusError');
+        }
+      });
+
+      await container.read(localeNotifierProvider.notifier).initialize();
+
+      runApp(
+        UncontrolledProviderScope(
+          container: container,
+          child: const CheckWordsApp(),
+        ),
+      );
+    },
+    (error, stackTrace) {
+      AppLogger.error(
+        'Uncaught top-level error',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    },
+    zoneSpecification: ZoneSpecification(
+      print: (self, parent, zone, line) {
+        if (_shouldSuppressPrint(line)) {
+          return;
+        }
+        parent.print(zone, line);
+      },
     ),
   );
+}
+
+bool _shouldSuppressPrint(String message) {
+  final trimmed = message.trimLeft();
+  if (trimmed.isEmpty) {
+    return true;
+  }
+
+  final lower = trimmed.toLowerCase();
+  if (lower.contains('error') || trimmed.contains('错误')) {
+    return false;
+  }
+
+  const noisyPrefixes = <String>[
+    '🔍',
+    // '✅', // 保留成功日志用于调试
+    // '❌', // 保留错误日志用于调试
+    '🚨',
+    '🧪',
+    '🧹',
+    '🔄',
+    '   -',
+  ];
+
+  for (final prefix in noisyPrefixes) {
+    if (trimmed.startsWith(prefix)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 class CheckWordsApp extends ConsumerWidget {
@@ -98,7 +180,6 @@ class CheckWordsApp extends ConsumerWidget {
     final currentFont = ref.watch(currentFontProvider);
     final localeState = ref.watch(localeNotifierProvider);
 
-    // 在加载时也显示正确的语言
     if (localeState.isLoading) {
       return MaterialApp(
         title: 'CheckWords',
@@ -113,7 +194,6 @@ class CheckWordsApp extends ConsumerWidget {
           Locale('zh', 'CN'),
           Locale('en', 'US'),
         ],
-        // 使用 locale provider 的状态，即使在加载中也使用中文作为默认
         locale: const Locale('zh', 'CN'),
         home: const Scaffold(
           backgroundColor: Colors.white,

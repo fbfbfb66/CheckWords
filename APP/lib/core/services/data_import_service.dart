@@ -15,7 +15,10 @@ import '../database/app_database.dart';
 class DataImportService {
   static const String _importedKey = 'data_imported';
   static const String _versionKey = 'import_version';
-  static const int _currentImportVersion = 11;  // 🚨 升级：强制重新创建数据库结构
+  static const int _currentImportVersion = 15;  // v1.2 - 导入完整的词汇数据库
+  // 版本历史:
+  // v1.1 (11): 初始版本
+  // v1.2 (12): 完整词汇数据库导入
   static const String _assetJsonPath = 'assets/data/main.db';
 
   /// 检查是否需要导入数据
@@ -24,11 +27,11 @@ class DataImportService {
     final isMarkedAsImported = prefs.getBool(_importedKey) ?? false;
     final importVersion = prefs.getInt(_versionKey) ?? 0;
 
-    print('🚨🚨🚨 [DataImport] 检查导入状态: 已导入=$isMarkedAsImported, 版本=$importVersion, 当前版本=$_currentImportVersion');
+    print('🍔🍔🍔 [DataImport] 检查导入状态: 已导入=$isMarkedAsImported, 版本=$importVersion, 当前版本=$_currentImportVersion');
 
-    // 🚨 关键修复：检查版本号，强制重新导入
+    // 关键修复：检查版本号，强制重新导入
     if (importVersion < _currentImportVersion) {
-      print('🚨🚨🚨 [DataImport] 检测到版本升级，强制重新导入数据');
+      print('🍔🍔🍔 [DataImport] 检测到版本升级，强制重新导入数据');
       await prefs.setBool(_importedKey, false);
       await prefs.setInt(_versionKey, _currentImportVersion);
       return true;
@@ -60,20 +63,24 @@ class DataImportService {
   static Future<void> markAsImported() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_importedKey, true);
-    await prefs.setInt(_versionKey, _currentImportVersion);  // 🚨 保存当前版本号
-    print('🚨🚨🚨 [DataImport] 数据导入完成，版本: $_currentImportVersion');
+    await prefs.setInt(_versionKey, _currentImportVersion);  // 保存当前版本号
+    print('🍔🍔🍔 [DataImport] 数据导入完成，版本: $_currentImportVersion');
   }
 
   /// 从assets导入预置的词汇数据
   static Future<bool> importWordsData(AppDatabase database) async {
     try {
       print('[DataImport] 开始导入词汇数据...');
-      
+
       // 检查是否需要导入
       if (!await needsImport()) {
         print('[DataImport] 数据已导入，跳过导入过程');
         return true;
       }
+
+      // 🔧 真机修复：强制清理可能冲突的数据
+      print('[DataImport] 🔧 真机修复：清理旧数据...');
+      await _cleanupForRealDevice(database);
 
       // 从数据库文件导入
       final imported = await _importFromDatabase(database);
@@ -89,6 +96,26 @@ class DataImportService {
     } catch (e) {
       print('[DataImport] 导入过程中发生错误: $e');
       return false;
+    }
+  }
+
+  /// 真机数据清理：清除可能的冲突数据
+  static Future<void> _cleanupForRealDevice(AppDatabase database) async {
+    try {
+      print('[DataImport] 开始真机数据清理...');
+
+      // 1. 删除所有词汇数据
+      await database.customStatement('DELETE FROM words_table');
+      await database.customStatement('DELETE FROM words_fts');
+      await database.customStatement('DELETE FROM favorites_table');
+
+      // 2. 重置自增ID
+      await database.customStatement('DELETE FROM sqlite_sequence WHERE name IN (\'words_table\', \'favorites_table\')');
+
+      print('[DataImport] ✅ 真机数据清理完成');
+    } catch (e) {
+      print('[DataImport] ⚠️ 数据清理过程中出现警告: $e');
+      // 不抛出异常，继续导入过程
     }
   }
 
@@ -120,7 +147,7 @@ class DataImportService {
 
         // 查询外部数据库中的词汇数据
         final List<Map<String, dynamic>> externalWords = await externalDb.rawQuery('SELECT * FROM words_table ORDER BY wordRank LIMIT 5');
-        print('[DataImport] 从外部数据库读取到前5个词汇作为样本:');
+        print('[DataImport] 从外部数据库读取到前5个词汇作为样本');
         for (int i = 0; i < externalWords.length; i++) {
           final word = externalWords[i];
           print('[DataImport] 词汇${i + 1}: ${word.keys.join(", ")}');
@@ -138,7 +165,7 @@ class DataImportService {
 
         // 读取所有数据
         final allWords = await externalDb.rawQuery('SELECT * FROM words_table ORDER BY wordRank');
-        print('[DataImport] 成功读取所有 ${allWords.length} 个词汇');
+        print('[DataImport] 成功读取所有${allWords.length} 个词汇');
 
         if (allWords.isEmpty) {
           print('[DataImport] 外部数据库为空');
@@ -167,7 +194,7 @@ class DataImportService {
     }
   }
 
-  
+
   /// 批量插入数据
   static Future<void> _insertBatch(AppDatabase database, List<dynamic> batch) async {
     await database.batch((batchOp) {
@@ -250,7 +277,7 @@ class DataImportService {
     }
   }
 
-  
+
   /// 提取释义列表
   static List<dynamic> _extractTrans(Map<String, dynamic> wordData) {
     try {
@@ -437,14 +464,14 @@ class DataImportService {
     }
   }
 
-  /// 清洗数据库：删除CET6垃圾数据
+  /// 清理数据库：删除CET6垃圾数据
   static Future<bool> cleanDatabase(AppDatabase database) async {
     try {
-      print('🧹 开始清洗数据库...');
+      print('🚮 开始清理数据库...');
 
       // 1. 检查当前数据状态
       final totalCount = await database.customSelect('SELECT COUNT(*) as count FROM words_table').getSingle();
-      print('   清洗前总词汇数: ${totalCount.data['count']}');
+      print('   清理前总词汇数: ${totalCount.data['count']}');
 
       // 2. 检查CET6数据
       final cet6Count = await database.customSelect('''
@@ -472,8 +499,8 @@ class DataImportService {
         final afterCount = await database.customSelect('SELECT COUNT(*) as count FROM words_table').getSingle();
         final cleanedCount = (totalCount.data['count'] as int) - (afterCount.data['count'] as int);
 
-        print('   ✅ 清洗完成！删除了 $cleanedCount 条垃圾数据');
-        print('   清洗后总词汇数: ${afterCount.data['count']}');
+        print('   ✔ 清理完成！删除了 $cleanedCount 条垃圾数据');
+        print('   清理后总词汇数: ${afterCount.data['count']}');
 
         // 7. 重置导入标记，强制重新导入
         final prefs = await SharedPreferences.getInstance();
@@ -482,12 +509,12 @@ class DataImportService {
 
         return true;
       } else {
-        print('   ✅ 未发现CET6垃圾数据，数据库已干净');
+        print('   ✔ 未发现CET6垃圾数据，数据库已干净');
         return true;
       }
 
     } catch (e) {
-      print('[DataImport] 数据库清洗失败: $e');
+      print('[DataImport] 数据库清理失败: $e');
       return false;
     }
   }
@@ -506,7 +533,7 @@ class DataImportService {
       await prefs.setBool(_importedKey, false);
       await prefs.setInt(_versionKey, _currentImportVersion - 1);
 
-      print('   ✅ 数据库已完全重置');
+      print('   ✔ 数据库已完全重置');
 
       // 3. 重新导入
       return await importWordsData(database);
@@ -538,7 +565,7 @@ class DataImportService {
         SELECT id, headWord, wordId, searchContent FROM words_table
       ''');
 
-      // 4. 验证同步结果
+      // 4. 确认同步结果
       final ftsCount = await database.customSelect(
         'SELECT COUNT(*) as count FROM words_fts'
       ).getSingle();
@@ -547,7 +574,7 @@ class DataImportService {
       ).getSingle();
 
       if (ftsCount.data['count'] != mainCount.data['count']) {
-        throw Exception('FTS5同步不完整: ${ftsCount.data['count']}/${mainCount.data['count']}');
+        throw Exception('FTS5同步不完整 ${ftsCount.data['count']}/${mainCount.data['count']}');
       }
 
       print('[DataImport] FTS5数据同步完成: ${ftsCount.data['count']} 条记录');
@@ -560,29 +587,50 @@ class DataImportService {
   /// 从assets复制数据库文件到临时目录
   static Future<String?> _copyDatabaseFromAssets() async {
     try {
-      // 🚨 修复：在Windows平台初始化databaseFactory
+      // 修复：在Windows平台初始化databaseFactory
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
         sqfliteFfiInit();
         databaseFactory = databaseFactoryFfi;
       }
 
       // 从assets读取数据库文件
+      print('[DataImport] 开始从assets读取数据库文件...');
       final byteData = await rootBundle.load('assets/data/main.db');
       final bytes = byteData.buffer.asUint8List();
+      print('[DataImport] 成功读取数据库文件，大小: ${bytes.length} bytes');
 
-      // 创建临时目录
-      final tempDir = await getTemporaryDirectory();
-      final tempDbPath = p.join(tempDir.path, 'temp_cet4_words.db');
+      // 在真机上优先使用应用文档目录而不是临时目录
+      Directory tempDir;
+      if (Platform.isAndroid || Platform.isIOS) {
+        // 真机上使用应用文档目录
+        tempDir = await getApplicationDocumentsDirectory();
+        print('[DataImport] 使用应用文档目录: ${tempDir.path}');
+      } else {
+        // 桌面平台使用临时目录
+        tempDir = await getTemporaryDirectory();
+        print('[DataImport] 使用临时目录: ${tempDir.path}');
+      }
+
+      final tempDbPath = p.join(tempDir.path, 'temp_cet4_words_${DateTime.now().millisecondsSinceEpoch}.db');
 
       // 写入临时文件
+      print('[DataImport] 写入临时文件: $tempDbPath');
       final file = File(tempDbPath);
       await file.writeAsBytes(bytes);
 
-      print('[DataImport] 数据库文件已复制到: $tempDbPath');
-      return tempDbPath;
+      // 验证文件是否成功写入
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        print('[DataImport] ✅ 数据库文件已成功复制，大小: $fileSize bytes');
+        return tempDbPath;
+      } else {
+        print('[DataImport] ❌ 临时文件创建失败');
+        return null;
+      }
 
     } catch (e) {
-      print('[DataImport] 复制数据库文件失败: $e');
+      print('[DataImport] ❌ 复制数据库文件失败: $e');
+      print('[DataImport] 错误堆栈: ${StackTrace.current}');
       return null;
     }
   }
@@ -621,11 +669,11 @@ class DataImportService {
 
         // 每1000条处理一次
         if ((i + 1) % 1000 == 0) {
-          print('[DataImport] 已处理 ${i + 1} 条数据...');
+          print('[DataImport] 已处理${i + 1} 条数据...');
         }
 
       } catch (e) {
-        print('[DataImport] 处理词汇数据时出错 (索引 $i): $e');
+        print('[DataImport] 处理词汇数据时出错(索引 $i): $e');
         print('[DataImport] 问题数据: $word');
       }
     }
@@ -637,5 +685,4 @@ class DataImportService {
 
     print('[DataImport] 批量插入完成');
   }
-
-  }
+}

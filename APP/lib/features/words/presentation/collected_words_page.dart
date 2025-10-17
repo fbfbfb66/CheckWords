@@ -114,20 +114,10 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
 
   @override
   Widget build(BuildContext context) {
-    final isAuthenticated = ref.watch(isAuthenticatedProvider);
-
     // 监听 locale 变化以确保页面在语言切换时重建
     ref.watch(localeNotifierProvider);
 
-    if (!isAuthenticated) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(S.current.favoriteWords),
-          centerTitle: true,
-        ),
-        body: _buildNotLoggedInView(context),
-      );
-    }
+    // 现在应用会自动创建设备用户，不需要检查登录状态
 
     return Scaffold(
       appBar: AppBar(
@@ -459,47 +449,7 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
   }
 
   /// 构建未登录视图
-  Widget _buildNotLoggedInView(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spacingXLarge),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_outline,
-              size: 80,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: DesignTokens.spacingLarge),
-            Text(
-              S.current.pleaseLoginFirst,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: DesignTokens.spacingMedium),
-            Text(
-              S.current.loginToViewCollectedWords,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DesignTokens.spacingXLarge),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.go(RoutePaths.login),
-                child: Text(S.current.loginNow),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  
   /// 构建单词卡片
   Widget _buildWordCard(WordModel word) {
     return Card(
@@ -590,9 +540,9 @@ class _CollectedWordsPageState extends ConsumerState<CollectedWordsPage>
                           title: Text('...'),
                           dense: true,
                         ),
-                        error: (_, __) => const ListTile(
-                          leading: Icon(Icons.favorite_border),
-                          title: Text('收录'),
+                        error: (_, __) => ListTile(
+                          leading: const Icon(Icons.favorite_border),
+                          title: Text(S.current.collect),
                           dense: true,
                         ),
                       );

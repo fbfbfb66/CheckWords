@@ -877,80 +877,16 @@ class $UsersTableTable extends UsersTable
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 50),
       type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _emailMeta = const VerificationMeta('email');
-  @override
-  late final GeneratedColumn<String> email = GeneratedColumn<String>(
-      'email', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 5, maxTextLength: 100),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _passwordHashMeta =
-      const VerificationMeta('passwordHash');
-  @override
-  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
-      'password_hash', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      requiredDuringInsert: false,
+      defaultValue: const Constant('学习者'));
   static const VerificationMeta _avatarPathMeta =
       const VerificationMeta('avatarPath');
   @override
   late final GeneratedColumn<String> avatarPath = GeneratedColumn<String>(
       'avatar_path', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _emailVerifiedMeta =
-      const VerificationMeta('emailVerified');
   @override
-  late final GeneratedColumn<bool> emailVerified = GeneratedColumn<bool>(
-      'email_verified', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("email_verified" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _preferencesMeta =
-      const VerificationMeta('preferences');
-  @override
-  late final GeneratedColumn<String> preferences = GeneratedColumn<String>(
-      'preferences', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('{}'));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _lastLoginAtMeta =
-      const VerificationMeta('lastLoginAt');
-  @override
-  late final GeneratedColumn<DateTime> lastLoginAt = GeneratedColumn<DateTime>(
-      'last_login_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        name,
-        email,
-        passwordHash,
-        avatarPath,
-        emailVerified,
-        preferences,
-        createdAt,
-        updatedAt,
-        lastLoginAt
-      ];
+  List<GeneratedColumn> get $columns => [id, name, avatarPath];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -969,22 +905,6 @@ class $UsersTableTable extends UsersTable
     if (data.containsKey('name')) {
       context.handle(
           _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('email')) {
-      context.handle(
-          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
-    } else if (isInserting) {
-      context.missing(_emailMeta);
-    }
-    if (data.containsKey('password_hash')) {
-      context.handle(
-          _passwordHashMeta,
-          passwordHash.isAcceptableOrUnknown(
-              data['password_hash']!, _passwordHashMeta));
-    } else if (isInserting) {
-      context.missing(_passwordHashMeta);
     }
     if (data.containsKey('avatar_path')) {
       context.handle(
@@ -992,41 +912,11 @@ class $UsersTableTable extends UsersTable
           avatarPath.isAcceptableOrUnknown(
               data['avatar_path']!, _avatarPathMeta));
     }
-    if (data.containsKey('email_verified')) {
-      context.handle(
-          _emailVerifiedMeta,
-          emailVerified.isAcceptableOrUnknown(
-              data['email_verified']!, _emailVerifiedMeta));
-    }
-    if (data.containsKey('preferences')) {
-      context.handle(
-          _preferencesMeta,
-          preferences.isAcceptableOrUnknown(
-              data['preferences']!, _preferencesMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('last_login_at')) {
-      context.handle(
-          _lastLoginAtMeta,
-          lastLoginAt.isAcceptableOrUnknown(
-              data['last_login_at']!, _lastLoginAtMeta));
-    }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  List<Set<GeneratedColumn>> get uniqueKeys => [
-        {email},
-      ];
   @override
   UsersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -1035,22 +925,8 @@ class $UsersTableTable extends UsersTable
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      email: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
-      passwordHash: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}password_hash'])!,
       avatarPath: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}avatar_path']),
-      emailVerified: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}email_verified'])!,
-      preferences: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}preferences'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      lastLoginAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_login_at']),
     );
   }
 
@@ -1067,56 +943,16 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
   /// 用户名/昵称
   final String name;
 
-  /// 邮箱
-  final String email;
-
-  /// 密码哈希 (使用bcrypt等安全哈希)
-  final String passwordHash;
-
-  /// 头像路径 (本地文件路径或URL)
+  /// 头像路径 (本地文件路径)
   final String? avatarPath;
-
-  /// 是否已验证邮箱
-  final bool emailVerified;
-
-  /// 用户偏好设置 (JSON格式)
-  final String preferences;
-
-  /// 创建时间
-  final DateTime createdAt;
-
-  /// 更新时间
-  final DateTime updatedAt;
-
-  /// 最后登录时间
-  final DateTime? lastLoginAt;
-  const UsersTableData(
-      {required this.id,
-      required this.name,
-      required this.email,
-      required this.passwordHash,
-      this.avatarPath,
-      required this.emailVerified,
-      required this.preferences,
-      required this.createdAt,
-      required this.updatedAt,
-      this.lastLoginAt});
+  const UsersTableData({required this.id, required this.name, this.avatarPath});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
-    map['email'] = Variable<String>(email);
-    map['password_hash'] = Variable<String>(passwordHash);
     if (!nullToAbsent || avatarPath != null) {
       map['avatar_path'] = Variable<String>(avatarPath);
-    }
-    map['email_verified'] = Variable<bool>(emailVerified);
-    map['preferences'] = Variable<String>(preferences);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || lastLoginAt != null) {
-      map['last_login_at'] = Variable<DateTime>(lastLoginAt);
     }
     return map;
   }
@@ -1125,18 +961,9 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     return UsersTableCompanion(
       id: Value(id),
       name: Value(name),
-      email: Value(email),
-      passwordHash: Value(passwordHash),
       avatarPath: avatarPath == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarPath),
-      emailVerified: Value(emailVerified),
-      preferences: Value(preferences),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      lastLoginAt: lastLoginAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastLoginAt),
     );
   }
 
@@ -1146,14 +973,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     return UsersTableData(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      email: serializer.fromJson<String>(json['email']),
-      passwordHash: serializer.fromJson<String>(json['passwordHash']),
       avatarPath: serializer.fromJson<String?>(json['avatarPath']),
-      emailVerified: serializer.fromJson<bool>(json['emailVerified']),
-      preferences: serializer.fromJson<String>(json['preferences']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      lastLoginAt: serializer.fromJson<DateTime?>(json['lastLoginAt']),
     );
   }
   @override
@@ -1162,59 +982,25 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'email': serializer.toJson<String>(email),
-      'passwordHash': serializer.toJson<String>(passwordHash),
       'avatarPath': serializer.toJson<String?>(avatarPath),
-      'emailVerified': serializer.toJson<bool>(emailVerified),
-      'preferences': serializer.toJson<String>(preferences),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'lastLoginAt': serializer.toJson<DateTime?>(lastLoginAt),
     };
   }
 
   UsersTableData copyWith(
           {String? id,
           String? name,
-          String? email,
-          String? passwordHash,
-          Value<String?> avatarPath = const Value.absent(),
-          bool? emailVerified,
-          String? preferences,
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          Value<DateTime?> lastLoginAt = const Value.absent()}) =>
+          Value<String?> avatarPath = const Value.absent()}) =>
       UsersTableData(
         id: id ?? this.id,
         name: name ?? this.name,
-        email: email ?? this.email,
-        passwordHash: passwordHash ?? this.passwordHash,
         avatarPath: avatarPath.present ? avatarPath.value : this.avatarPath,
-        emailVerified: emailVerified ?? this.emailVerified,
-        preferences: preferences ?? this.preferences,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        lastLoginAt: lastLoginAt.present ? lastLoginAt.value : this.lastLoginAt,
       );
   UsersTableData copyWithCompanion(UsersTableCompanion data) {
     return UsersTableData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      email: data.email.present ? data.email.value : this.email,
-      passwordHash: data.passwordHash.present
-          ? data.passwordHash.value
-          : this.passwordHash,
       avatarPath:
           data.avatarPath.present ? data.avatarPath.value : this.avatarPath,
-      emailVerified: data.emailVerified.present
-          ? data.emailVerified.value
-          : this.emailVerified,
-      preferences:
-          data.preferences.present ? data.preferences.value : this.preferences,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      lastLoginAt:
-          data.lastLoginAt.present ? data.lastLoginAt.value : this.lastLoginAt,
     );
   }
 
@@ -1223,102 +1009,49 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     return (StringBuffer('UsersTableData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('email: $email, ')
-          ..write('passwordHash: $passwordHash, ')
-          ..write('avatarPath: $avatarPath, ')
-          ..write('emailVerified: $emailVerified, ')
-          ..write('preferences: $preferences, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('lastLoginAt: $lastLoginAt')
+          ..write('avatarPath: $avatarPath')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, email, passwordHash, avatarPath,
-      emailVerified, preferences, createdAt, updatedAt, lastLoginAt);
+  int get hashCode => Object.hash(id, name, avatarPath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UsersTableData &&
           other.id == this.id &&
           other.name == this.name &&
-          other.email == this.email &&
-          other.passwordHash == this.passwordHash &&
-          other.avatarPath == this.avatarPath &&
-          other.emailVerified == this.emailVerified &&
-          other.preferences == this.preferences &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.lastLoginAt == this.lastLoginAt);
+          other.avatarPath == this.avatarPath);
 }
 
 class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
   final Value<String> id;
   final Value<String> name;
-  final Value<String> email;
-  final Value<String> passwordHash;
   final Value<String?> avatarPath;
-  final Value<bool> emailVerified;
-  final Value<String> preferences;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<DateTime?> lastLoginAt;
   final Value<int> rowid;
   const UsersTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
-    this.email = const Value.absent(),
-    this.passwordHash = const Value.absent(),
     this.avatarPath = const Value.absent(),
-    this.emailVerified = const Value.absent(),
-    this.preferences = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.lastLoginAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UsersTableCompanion.insert({
     required String id,
-    required String name,
-    required String email,
-    required String passwordHash,
+    this.name = const Value.absent(),
     this.avatarPath = const Value.absent(),
-    this.emailVerified = const Value.absent(),
-    this.preferences = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.lastLoginAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name),
-        email = Value(email),
-        passwordHash = Value(passwordHash);
+  }) : id = Value(id);
   static Insertable<UsersTableData> custom({
     Expression<String>? id,
     Expression<String>? name,
-    Expression<String>? email,
-    Expression<String>? passwordHash,
     Expression<String>? avatarPath,
-    Expression<bool>? emailVerified,
-    Expression<String>? preferences,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<DateTime>? lastLoginAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
-      if (email != null) 'email': email,
-      if (passwordHash != null) 'password_hash': passwordHash,
       if (avatarPath != null) 'avatar_path': avatarPath,
-      if (emailVerified != null) 'email_verified': emailVerified,
-      if (preferences != null) 'preferences': preferences,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (lastLoginAt != null) 'last_login_at': lastLoginAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1326,26 +1059,12 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
   UsersTableCompanion copyWith(
       {Value<String>? id,
       Value<String>? name,
-      Value<String>? email,
-      Value<String>? passwordHash,
       Value<String?>? avatarPath,
-      Value<bool>? emailVerified,
-      Value<String>? preferences,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<DateTime?>? lastLoginAt,
       Value<int>? rowid}) {
     return UsersTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
-      email: email ?? this.email,
-      passwordHash: passwordHash ?? this.passwordHash,
       avatarPath: avatarPath ?? this.avatarPath,
-      emailVerified: emailVerified ?? this.emailVerified,
-      preferences: preferences ?? this.preferences,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1359,29 +1078,8 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
-    if (email.present) {
-      map['email'] = Variable<String>(email.value);
-    }
-    if (passwordHash.present) {
-      map['password_hash'] = Variable<String>(passwordHash.value);
-    }
     if (avatarPath.present) {
       map['avatar_path'] = Variable<String>(avatarPath.value);
-    }
-    if (emailVerified.present) {
-      map['email_verified'] = Variable<bool>(emailVerified.value);
-    }
-    if (preferences.present) {
-      map['preferences'] = Variable<String>(preferences.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (lastLoginAt.present) {
-      map['last_login_at'] = Variable<DateTime>(lastLoginAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1394,26 +1092,19 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     return (StringBuffer('UsersTableCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('email: $email, ')
-          ..write('passwordHash: $passwordHash, ')
           ..write('avatarPath: $avatarPath, ')
-          ..write('emailVerified: $emailVerified, ')
-          ..write('preferences: $preferences, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('lastLoginAt: $lastLoginAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $UserWordsTableTable extends UserWordsTable
-    with TableInfo<$UserWordsTableTable, UserWordsTableData> {
+class $FavoritesTableTable extends FavoritesTable
+    with TableInfo<$FavoritesTableTable, FavoritesTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $UserWordsTableTable(this.attachedDatabase, [this._alias]);
+  $FavoritesTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -1423,14 +1114,6 @@ class $UserWordsTableTable extends UserWordsTable
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  @override
-  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES users_table (id) ON DELETE CASCADE'));
   static const VerificationMeta _wordIdMeta = const VerificationMeta('wordId');
   @override
   late final GeneratedColumn<int> wordId = GeneratedColumn<int>(
@@ -1518,13 +1201,6 @@ class $UserWordsTableTable extends UserWordsTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant(''));
-  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
-  @override
-  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
-      'tags', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('[]'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1550,7 +1226,6 @@ class $UserWordsTableTable extends UserWordsTable
   @override
   List<GeneratedColumn> get $columns => [
         id,
-        userId,
         wordId,
         isFavorited,
         learningStatus,
@@ -1562,7 +1237,6 @@ class $UserWordsTableTable extends UserWordsTable
         reviewInterval,
         easeFactor,
         notes,
-        tags,
         createdAt,
         updatedAt,
         lastReviewedAt
@@ -1571,20 +1245,14 @@ class $UserWordsTableTable extends UserWordsTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'user_words_table';
+  static const String $name = 'favorites_table';
   @override
-  VerificationContext validateIntegrity(Insertable<UserWordsTableData> instance,
+  VerificationContext validateIntegrity(Insertable<FavoritesTableData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
-    } else if (isInserting) {
-      context.missing(_userIdMeta);
     }
     if (data.containsKey('word_id')) {
       context.handle(_wordIdMeta,
@@ -1650,10 +1318,6 @@ class $UserWordsTableTable extends UserWordsTable
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
     }
-    if (data.containsKey('tags')) {
-      context.handle(
-          _tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
-    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1675,16 +1339,14 @@ class $UserWordsTableTable extends UserWordsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-        {userId, wordId},
+        {wordId},
       ];
   @override
-  UserWordsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  FavoritesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UserWordsTableData(
+    return FavoritesTableData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
       wordId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}word_id'])!,
       isFavorited: attachedDatabase.typeMapping
@@ -1707,8 +1369,6 @@ class $UserWordsTableTable extends UserWordsTable
           .read(DriftSqlType.double, data['${effectivePrefix}ease_factor'])!,
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes'])!,
-      tags: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -1719,18 +1379,15 @@ class $UserWordsTableTable extends UserWordsTable
   }
 
   @override
-  $UserWordsTableTable createAlias(String alias) {
-    return $UserWordsTableTable(attachedDatabase, alias);
+  $FavoritesTableTable createAlias(String alias) {
+    return $FavoritesTableTable(attachedDatabase, alias);
   }
 }
 
-class UserWordsTableData extends DataClass
-    implements Insertable<UserWordsTableData> {
+class FavoritesTableData extends DataClass
+    implements Insertable<FavoritesTableData> {
   /// 主键ID
   final int id;
-
-  /// 用户ID
-  final String userId;
 
   /// 单词ID
   final int wordId;
@@ -1762,11 +1419,8 @@ class UserWordsTableData extends DataClass
   /// 难度因子 (SuperMemo算法使用)
   final double easeFactor;
 
-  /// 用户笔记
+  /// 学习笔记
   final String notes;
-
-  /// 标签 (JSON数组)
-  final String tags;
 
   /// 添加到收藏的时间
   final DateTime createdAt;
@@ -1776,9 +1430,8 @@ class UserWordsTableData extends DataClass
 
   /// 最后复习时间
   final DateTime? lastReviewedAt;
-  const UserWordsTableData(
+  const FavoritesTableData(
       {required this.id,
-      required this.userId,
       required this.wordId,
       required this.isFavorited,
       required this.learningStatus,
@@ -1790,7 +1443,6 @@ class UserWordsTableData extends DataClass
       required this.reviewInterval,
       required this.easeFactor,
       required this.notes,
-      required this.tags,
       required this.createdAt,
       required this.updatedAt,
       this.lastReviewedAt});
@@ -1798,7 +1450,6 @@ class UserWordsTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['user_id'] = Variable<String>(userId);
     map['word_id'] = Variable<int>(wordId);
     map['is_favorited'] = Variable<bool>(isFavorited);
     map['learning_status'] = Variable<int>(learningStatus);
@@ -1812,7 +1463,6 @@ class UserWordsTableData extends DataClass
     map['review_interval'] = Variable<int>(reviewInterval);
     map['ease_factor'] = Variable<double>(easeFactor);
     map['notes'] = Variable<String>(notes);
-    map['tags'] = Variable<String>(tags);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || lastReviewedAt != null) {
@@ -1821,10 +1471,9 @@ class UserWordsTableData extends DataClass
     return map;
   }
 
-  UserWordsTableCompanion toCompanion(bool nullToAbsent) {
-    return UserWordsTableCompanion(
+  FavoritesTableCompanion toCompanion(bool nullToAbsent) {
+    return FavoritesTableCompanion(
       id: Value(id),
-      userId: Value(userId),
       wordId: Value(wordId),
       isFavorited: Value(isFavorited),
       learningStatus: Value(learningStatus),
@@ -1838,7 +1487,6 @@ class UserWordsTableData extends DataClass
       reviewInterval: Value(reviewInterval),
       easeFactor: Value(easeFactor),
       notes: Value(notes),
-      tags: Value(tags),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       lastReviewedAt: lastReviewedAt == null && nullToAbsent
@@ -1847,12 +1495,11 @@ class UserWordsTableData extends DataClass
     );
   }
 
-  factory UserWordsTableData.fromJson(Map<String, dynamic> json,
+  factory FavoritesTableData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserWordsTableData(
+    return FavoritesTableData(
       id: serializer.fromJson<int>(json['id']),
-      userId: serializer.fromJson<String>(json['userId']),
       wordId: serializer.fromJson<int>(json['wordId']),
       isFavorited: serializer.fromJson<bool>(json['isFavorited']),
       learningStatus: serializer.fromJson<int>(json['learningStatus']),
@@ -1864,7 +1511,6 @@ class UserWordsTableData extends DataClass
       reviewInterval: serializer.fromJson<int>(json['reviewInterval']),
       easeFactor: serializer.fromJson<double>(json['easeFactor']),
       notes: serializer.fromJson<String>(json['notes']),
-      tags: serializer.fromJson<String>(json['tags']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       lastReviewedAt: serializer.fromJson<DateTime?>(json['lastReviewedAt']),
@@ -1875,7 +1521,6 @@ class UserWordsTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'userId': serializer.toJson<String>(userId),
       'wordId': serializer.toJson<int>(wordId),
       'isFavorited': serializer.toJson<bool>(isFavorited),
       'learningStatus': serializer.toJson<int>(learningStatus),
@@ -1887,16 +1532,14 @@ class UserWordsTableData extends DataClass
       'reviewInterval': serializer.toJson<int>(reviewInterval),
       'easeFactor': serializer.toJson<double>(easeFactor),
       'notes': serializer.toJson<String>(notes),
-      'tags': serializer.toJson<String>(tags),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'lastReviewedAt': serializer.toJson<DateTime?>(lastReviewedAt),
     };
   }
 
-  UserWordsTableData copyWith(
+  FavoritesTableData copyWith(
           {int? id,
-          String? userId,
           int? wordId,
           bool? isFavorited,
           int? learningStatus,
@@ -1908,13 +1551,11 @@ class UserWordsTableData extends DataClass
           int? reviewInterval,
           double? easeFactor,
           String? notes,
-          String? tags,
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> lastReviewedAt = const Value.absent()}) =>
-      UserWordsTableData(
+      FavoritesTableData(
         id: id ?? this.id,
-        userId: userId ?? this.userId,
         wordId: wordId ?? this.wordId,
         isFavorited: isFavorited ?? this.isFavorited,
         learningStatus: learningStatus ?? this.learningStatus,
@@ -1927,16 +1568,14 @@ class UserWordsTableData extends DataClass
         reviewInterval: reviewInterval ?? this.reviewInterval,
         easeFactor: easeFactor ?? this.easeFactor,
         notes: notes ?? this.notes,
-        tags: tags ?? this.tags,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         lastReviewedAt:
             lastReviewedAt.present ? lastReviewedAt.value : this.lastReviewedAt,
       );
-  UserWordsTableData copyWithCompanion(UserWordsTableCompanion data) {
-    return UserWordsTableData(
+  FavoritesTableData copyWithCompanion(FavoritesTableCompanion data) {
+    return FavoritesTableData(
       id: data.id.present ? data.id.value : this.id,
-      userId: data.userId.present ? data.userId.value : this.userId,
       wordId: data.wordId.present ? data.wordId.value : this.wordId,
       isFavorited:
           data.isFavorited.present ? data.isFavorited.value : this.isFavorited,
@@ -1963,7 +1602,6 @@ class UserWordsTableData extends DataClass
       easeFactor:
           data.easeFactor.present ? data.easeFactor.value : this.easeFactor,
       notes: data.notes.present ? data.notes.value : this.notes,
-      tags: data.tags.present ? data.tags.value : this.tags,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       lastReviewedAt: data.lastReviewedAt.present
@@ -1974,9 +1612,8 @@ class UserWordsTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('UserWordsTableData(')
+    return (StringBuffer('FavoritesTableData(')
           ..write('id: $id, ')
-          ..write('userId: $userId, ')
           ..write('wordId: $wordId, ')
           ..write('isFavorited: $isFavorited, ')
           ..write('learningStatus: $learningStatus, ')
@@ -1988,7 +1625,6 @@ class UserWordsTableData extends DataClass
           ..write('reviewInterval: $reviewInterval, ')
           ..write('easeFactor: $easeFactor, ')
           ..write('notes: $notes, ')
-          ..write('tags: $tags, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('lastReviewedAt: $lastReviewedAt')
@@ -1999,7 +1635,6 @@ class UserWordsTableData extends DataClass
   @override
   int get hashCode => Object.hash(
       id,
-      userId,
       wordId,
       isFavorited,
       learningStatus,
@@ -2011,16 +1646,14 @@ class UserWordsTableData extends DataClass
       reviewInterval,
       easeFactor,
       notes,
-      tags,
       createdAt,
       updatedAt,
       lastReviewedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is UserWordsTableData &&
+      (other is FavoritesTableData &&
           other.id == this.id &&
-          other.userId == this.userId &&
           other.wordId == this.wordId &&
           other.isFavorited == this.isFavorited &&
           other.learningStatus == this.learningStatus &&
@@ -2032,15 +1665,13 @@ class UserWordsTableData extends DataClass
           other.reviewInterval == this.reviewInterval &&
           other.easeFactor == this.easeFactor &&
           other.notes == this.notes &&
-          other.tags == this.tags &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.lastReviewedAt == this.lastReviewedAt);
 }
 
-class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
+class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
   final Value<int> id;
-  final Value<String> userId;
   final Value<int> wordId;
   final Value<bool> isFavorited;
   final Value<int> learningStatus;
@@ -2052,13 +1683,11 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
   final Value<int> reviewInterval;
   final Value<double> easeFactor;
   final Value<String> notes;
-  final Value<String> tags;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> lastReviewedAt;
-  const UserWordsTableCompanion({
+  const FavoritesTableCompanion({
     this.id = const Value.absent(),
-    this.userId = const Value.absent(),
     this.wordId = const Value.absent(),
     this.isFavorited = const Value.absent(),
     this.learningStatus = const Value.absent(),
@@ -2070,14 +1699,12 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
     this.reviewInterval = const Value.absent(),
     this.easeFactor = const Value.absent(),
     this.notes = const Value.absent(),
-    this.tags = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.lastReviewedAt = const Value.absent(),
   });
-  UserWordsTableCompanion.insert({
+  FavoritesTableCompanion.insert({
     this.id = const Value.absent(),
-    required String userId,
     required int wordId,
     this.isFavorited = const Value.absent(),
     this.learningStatus = const Value.absent(),
@@ -2089,15 +1716,12 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
     this.reviewInterval = const Value.absent(),
     this.easeFactor = const Value.absent(),
     this.notes = const Value.absent(),
-    this.tags = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.lastReviewedAt = const Value.absent(),
-  })  : userId = Value(userId),
-        wordId = Value(wordId);
-  static Insertable<UserWordsTableData> custom({
+  }) : wordId = Value(wordId);
+  static Insertable<FavoritesTableData> custom({
     Expression<int>? id,
-    Expression<String>? userId,
     Expression<int>? wordId,
     Expression<bool>? isFavorited,
     Expression<int>? learningStatus,
@@ -2109,14 +1733,12 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
     Expression<int>? reviewInterval,
     Expression<double>? easeFactor,
     Expression<String>? notes,
-    Expression<String>? tags,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? lastReviewedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (userId != null) 'user_id': userId,
       if (wordId != null) 'word_id': wordId,
       if (isFavorited != null) 'is_favorited': isFavorited,
       if (learningStatus != null) 'learning_status': learningStatus,
@@ -2128,16 +1750,14 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
       if (reviewInterval != null) 'review_interval': reviewInterval,
       if (easeFactor != null) 'ease_factor': easeFactor,
       if (notes != null) 'notes': notes,
-      if (tags != null) 'tags': tags,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (lastReviewedAt != null) 'last_reviewed_at': lastReviewedAt,
     });
   }
 
-  UserWordsTableCompanion copyWith(
+  FavoritesTableCompanion copyWith(
       {Value<int>? id,
-      Value<String>? userId,
       Value<int>? wordId,
       Value<bool>? isFavorited,
       Value<int>? learningStatus,
@@ -2149,13 +1769,11 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
       Value<int>? reviewInterval,
       Value<double>? easeFactor,
       Value<String>? notes,
-      Value<String>? tags,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? lastReviewedAt}) {
-    return UserWordsTableCompanion(
+    return FavoritesTableCompanion(
       id: id ?? this.id,
-      userId: userId ?? this.userId,
       wordId: wordId ?? this.wordId,
       isFavorited: isFavorited ?? this.isFavorited,
       learningStatus: learningStatus ?? this.learningStatus,
@@ -2167,7 +1785,6 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
       reviewInterval: reviewInterval ?? this.reviewInterval,
       easeFactor: easeFactor ?? this.easeFactor,
       notes: notes ?? this.notes,
-      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
@@ -2179,9 +1796,6 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
-    }
-    if (userId.present) {
-      map['user_id'] = Variable<String>(userId.value);
     }
     if (wordId.present) {
       map['word_id'] = Variable<int>(wordId.value);
@@ -2216,9 +1830,6 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
-    if (tags.present) {
-      map['tags'] = Variable<String>(tags.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2233,9 +1844,8 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('UserWordsTableCompanion(')
+    return (StringBuffer('FavoritesTableCompanion(')
           ..write('id: $id, ')
-          ..write('userId: $userId, ')
           ..write('wordId: $wordId, ')
           ..write('isFavorited: $isFavorited, ')
           ..write('learningStatus: $learningStatus, ')
@@ -2247,7 +1857,6 @@ class UserWordsTableCompanion extends UpdateCompanion<UserWordsTableData> {
           ..write('reviewInterval: $reviewInterval, ')
           ..write('easeFactor: $easeFactor, ')
           ..write('notes: $notes, ')
-          ..write('tags: $tags, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('lastReviewedAt: $lastReviewedAt')
@@ -2581,7 +2190,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WordsTableTable wordsTable = $WordsTableTable(this);
   late final $UsersTableTable usersTable = $UsersTableTable(this);
-  late final $UserWordsTableTable userWordsTable = $UserWordsTableTable(this);
+  late final $FavoritesTableTable favoritesTable = $FavoritesTableTable(this);
   late final $SearchHistoryTableTable searchHistoryTable =
       $SearchHistoryTableTable(this);
   @override
@@ -2589,22 +2198,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [wordsTable, usersTable, userWordsTable, searchHistoryTable];
+      [wordsTable, usersTable, favoritesTable, searchHistoryTable];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
           WritePropagation(
-            on: TableUpdateQuery.onTableName('users_table',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('user_words_table', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
             on: TableUpdateQuery.onTableName('words_table',
                 limitUpdateKind: UpdateKind.delete),
             result: [
-              TableUpdate('user_words_table', kind: UpdateKind.delete),
+              TableUpdate('favorites_table', kind: UpdateKind.delete),
             ],
           ),
           WritePropagation(
@@ -2663,17 +2265,17 @@ final class $$WordsTableTableReferences
     extends BaseReferences<_$AppDatabase, $WordsTableTable, WordsTableData> {
   $$WordsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$UserWordsTableTable, List<UserWordsTableData>>
-      _userWordsTableRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.userWordsTable,
+  static MultiTypedResultKey<$FavoritesTableTable, List<FavoritesTableData>>
+      _favoritesTableRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.favoritesTable,
               aliasName: $_aliasNameGenerator(
-                  db.wordsTable.id, db.userWordsTable.wordId));
+                  db.wordsTable.id, db.favoritesTable.wordId));
 
-  $$UserWordsTableTableProcessedTableManager get userWordsTableRefs {
-    final manager = $$UserWordsTableTableTableManager($_db, $_db.userWordsTable)
+  $$FavoritesTableTableProcessedTableManager get favoritesTableRefs {
+    final manager = $$FavoritesTableTableTableManager($_db, $_db.favoritesTable)
         .filter((f) => f.wordId.id($_item.id));
 
-    final cache = $_typedResult.readTableOrNull(_userWordsTableRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_favoritesTableRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -2742,19 +2344,19 @@ class $$WordsTableTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> userWordsTableRefs(
-      Expression<bool> Function($$UserWordsTableTableFilterComposer f) f) {
-    final $$UserWordsTableTableFilterComposer composer = $composerBuilder(
+  Expression<bool> favoritesTableRefs(
+      Expression<bool> Function($$FavoritesTableTableFilterComposer f) f) {
+    final $$FavoritesTableTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userWordsTable,
+        referencedTable: $db.favoritesTable,
         getReferencedColumn: (t) => t.wordId,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
-            $$UserWordsTableTableFilterComposer(
+            $$FavoritesTableTableFilterComposer(
               $db: $db,
-              $table: $db.userWordsTable,
+              $table: $db.favoritesTable,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -2892,19 +2494,19 @@ class $$WordsTableTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  Expression<T> userWordsTableRefs<T extends Object>(
-      Expression<T> Function($$UserWordsTableTableAnnotationComposer a) f) {
-    final $$UserWordsTableTableAnnotationComposer composer = $composerBuilder(
+  Expression<T> favoritesTableRefs<T extends Object>(
+      Expression<T> Function($$FavoritesTableTableAnnotationComposer a) f) {
+    final $$FavoritesTableTableAnnotationComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userWordsTable,
+        referencedTable: $db.favoritesTable,
         getReferencedColumn: (t) => t.wordId,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
-            $$UserWordsTableTableAnnotationComposer(
+            $$FavoritesTableTableAnnotationComposer(
               $db: $db,
-              $table: $db.userWordsTable,
+              $table: $db.favoritesTable,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -2925,7 +2527,7 @@ class $$WordsTableTableTableManager extends RootTableManager<
     $$WordsTableTableUpdateCompanionBuilder,
     (WordsTableData, $$WordsTableTableReferences),
     WordsTableData,
-    PrefetchHooks Function({bool userWordsTableRefs})> {
+    PrefetchHooks Function({bool favoritesTableRefs})> {
   $$WordsTableTableTableManager(_$AppDatabase db, $WordsTableTable table)
       : super(TableManagerState(
           db: db,
@@ -3022,23 +2624,23 @@ class $$WordsTableTableTableManager extends RootTableManager<
                     $$WordsTableTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({userWordsTableRefs = false}) {
+          prefetchHooksCallback: ({favoritesTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (userWordsTableRefs) db.userWordsTable
+                if (favoritesTableRefs) db.favoritesTable
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (userWordsTableRefs)
+                  if (favoritesTableRefs)
                     await $_getPrefetchedData(
                         currentTable: table,
                         referencedTable: $$WordsTableTableReferences
-                            ._userWordsTableRefsTable(db),
+                            ._favoritesTableRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$WordsTableTableReferences(db, table, p0)
-                                .userWordsTableRefs,
+                                .favoritesTableRefs,
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.wordId == item.id),
@@ -3061,52 +2663,23 @@ typedef $$WordsTableTableProcessedTableManager = ProcessedTableManager<
     $$WordsTableTableUpdateCompanionBuilder,
     (WordsTableData, $$WordsTableTableReferences),
     WordsTableData,
-    PrefetchHooks Function({bool userWordsTableRefs})>;
+    PrefetchHooks Function({bool favoritesTableRefs})>;
 typedef $$UsersTableTableCreateCompanionBuilder = UsersTableCompanion Function({
   required String id,
-  required String name,
-  required String email,
-  required String passwordHash,
+  Value<String> name,
   Value<String?> avatarPath,
-  Value<bool> emailVerified,
-  Value<String> preferences,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<DateTime?> lastLoginAt,
   Value<int> rowid,
 });
 typedef $$UsersTableTableUpdateCompanionBuilder = UsersTableCompanion Function({
   Value<String> id,
   Value<String> name,
-  Value<String> email,
-  Value<String> passwordHash,
   Value<String?> avatarPath,
-  Value<bool> emailVerified,
-  Value<String> preferences,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<DateTime?> lastLoginAt,
   Value<int> rowid,
 });
 
 final class $$UsersTableTableReferences
     extends BaseReferences<_$AppDatabase, $UsersTableTable, UsersTableData> {
   $$UsersTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$UserWordsTableTable, List<UserWordsTableData>>
-      _userWordsTableRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.userWordsTable,
-              aliasName: $_aliasNameGenerator(
-                  db.usersTable.id, db.userWordsTable.userId));
-
-  $$UserWordsTableTableProcessedTableManager get userWordsTableRefs {
-    final manager = $$UserWordsTableTableTableManager($_db, $_db.userWordsTable)
-        .filter((f) => f.userId.id($_item.id));
-
-    final cache = $_typedResult.readTableOrNull(_userWordsTableRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
 
   static MultiTypedResultKey<$SearchHistoryTableTable,
       List<SearchHistoryTableData>> _searchHistoryTableRefsTable(
@@ -3142,50 +2715,8 @@ class $$UsersTableTableFilterComposer
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<String> get avatarPath => $composableBuilder(
       column: $table.avatarPath, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get emailVerified => $composableBuilder(
-      column: $table.emailVerified, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get preferences => $composableBuilder(
-      column: $table.preferences, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastLoginAt => $composableBuilder(
-      column: $table.lastLoginAt, builder: (column) => ColumnFilters(column));
-
-  Expression<bool> userWordsTableRefs(
-      Expression<bool> Function($$UserWordsTableTableFilterComposer f) f) {
-    final $$UserWordsTableTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userWordsTable,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UserWordsTableTableFilterComposer(
-              $db: $db,
-              $table: $db.userWordsTable,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 
   Expression<bool> searchHistoryTableRefs(
       Expression<bool> Function($$SearchHistoryTableTableFilterComposer f) f) {
@@ -3224,31 +2755,8 @@ class $$UsersTableTableOrderingComposer
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash,
-      builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get avatarPath => $composableBuilder(
       column: $table.avatarPath, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get emailVerified => $composableBuilder(
-      column: $table.emailVerified,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get preferences => $composableBuilder(
-      column: $table.preferences, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastLoginAt => $composableBuilder(
-      column: $table.lastLoginAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$UsersTableTableAnnotationComposer
@@ -3266,50 +2774,8 @@ class $$UsersTableTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get email =>
-      $composableBuilder(column: $table.email, builder: (column) => column);
-
-  GeneratedColumn<String> get passwordHash => $composableBuilder(
-      column: $table.passwordHash, builder: (column) => column);
-
   GeneratedColumn<String> get avatarPath => $composableBuilder(
       column: $table.avatarPath, builder: (column) => column);
-
-  GeneratedColumn<bool> get emailVerified => $composableBuilder(
-      column: $table.emailVerified, builder: (column) => column);
-
-  GeneratedColumn<String> get preferences => $composableBuilder(
-      column: $table.preferences, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastLoginAt => $composableBuilder(
-      column: $table.lastLoginAt, builder: (column) => column);
-
-  Expression<T> userWordsTableRefs<T extends Object>(
-      Expression<T> Function($$UserWordsTableTableAnnotationComposer a) f) {
-    final $$UserWordsTableTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.userWordsTable,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UserWordsTableTableAnnotationComposer(
-              $db: $db,
-              $table: $db.userWordsTable,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 
   Expression<T> searchHistoryTableRefs<T extends Object>(
       Expression<T> Function($$SearchHistoryTableTableAnnotationComposer a) f) {
@@ -3345,8 +2811,7 @@ class $$UsersTableTableTableManager extends RootTableManager<
     $$UsersTableTableUpdateCompanionBuilder,
     (UsersTableData, $$UsersTableTableReferences),
     UsersTableData,
-    PrefetchHooks Function(
-        {bool userWordsTableRefs, bool searchHistoryTableRefs})> {
+    PrefetchHooks Function({bool searchHistoryTableRefs})> {
   $$UsersTableTableTableManager(_$AppDatabase db, $UsersTableTable table)
       : super(TableManagerState(
           db: db,
@@ -3360,53 +2825,25 @@ class $$UsersTableTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
             Value<String> name = const Value.absent(),
-            Value<String> email = const Value.absent(),
-            Value<String> passwordHash = const Value.absent(),
             Value<String?> avatarPath = const Value.absent(),
-            Value<bool> emailVerified = const Value.absent(),
-            Value<String> preferences = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<DateTime?> lastLoginAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UsersTableCompanion(
             id: id,
             name: name,
-            email: email,
-            passwordHash: passwordHash,
             avatarPath: avatarPath,
-            emailVerified: emailVerified,
-            preferences: preferences,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            lastLoginAt: lastLoginAt,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
-            required String name,
-            required String email,
-            required String passwordHash,
+            Value<String> name = const Value.absent(),
             Value<String?> avatarPath = const Value.absent(),
-            Value<bool> emailVerified = const Value.absent(),
-            Value<String> preferences = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<DateTime?> lastLoginAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UsersTableCompanion.insert(
             id: id,
             name: name,
-            email: email,
-            passwordHash: passwordHash,
             avatarPath: avatarPath,
-            emailVerified: emailVerified,
-            preferences: preferences,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            lastLoginAt: lastLoginAt,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -3415,29 +2852,15 @@ class $$UsersTableTableTableManager extends RootTableManager<
                     $$UsersTableTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: (
-              {userWordsTableRefs = false, searchHistoryTableRefs = false}) {
+          prefetchHooksCallback: ({searchHistoryTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (userWordsTableRefs) db.userWordsTable,
                 if (searchHistoryTableRefs) db.searchHistoryTable
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (userWordsTableRefs)
-                    await $_getPrefetchedData(
-                        currentTable: table,
-                        referencedTable: $$UsersTableTableReferences
-                            ._userWordsTableRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$UsersTableTableReferences(db, table, p0)
-                                .userWordsTableRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.userId == item.id),
-                        typedResults: items),
                   if (searchHistoryTableRefs)
                     await $_getPrefetchedData(
                         currentTable: table,
@@ -3468,12 +2891,10 @@ typedef $$UsersTableTableProcessedTableManager = ProcessedTableManager<
     $$UsersTableTableUpdateCompanionBuilder,
     (UsersTableData, $$UsersTableTableReferences),
     UsersTableData,
-    PrefetchHooks Function(
-        {bool userWordsTableRefs, bool searchHistoryTableRefs})>;
-typedef $$UserWordsTableTableCreateCompanionBuilder = UserWordsTableCompanion
+    PrefetchHooks Function({bool searchHistoryTableRefs})>;
+typedef $$FavoritesTableTableCreateCompanionBuilder = FavoritesTableCompanion
     Function({
   Value<int> id,
-  required String userId,
   required int wordId,
   Value<bool> isFavorited,
   Value<int> learningStatus,
@@ -3485,15 +2906,13 @@ typedef $$UserWordsTableTableCreateCompanionBuilder = UserWordsTableCompanion
   Value<int> reviewInterval,
   Value<double> easeFactor,
   Value<String> notes,
-  Value<String> tags,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> lastReviewedAt,
 });
-typedef $$UserWordsTableTableUpdateCompanionBuilder = UserWordsTableCompanion
+typedef $$FavoritesTableTableUpdateCompanionBuilder = FavoritesTableCompanion
     Function({
   Value<int> id,
-  Value<String> userId,
   Value<int> wordId,
   Value<bool> isFavorited,
   Value<int> learningStatus,
@@ -3505,34 +2924,19 @@ typedef $$UserWordsTableTableUpdateCompanionBuilder = UserWordsTableCompanion
   Value<int> reviewInterval,
   Value<double> easeFactor,
   Value<String> notes,
-  Value<String> tags,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> lastReviewedAt,
 });
 
-final class $$UserWordsTableTableReferences extends BaseReferences<
-    _$AppDatabase, $UserWordsTableTable, UserWordsTableData> {
-  $$UserWordsTableTableReferences(
+final class $$FavoritesTableTableReferences extends BaseReferences<
+    _$AppDatabase, $FavoritesTableTable, FavoritesTableData> {
+  $$FavoritesTableTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
-
-  static $UsersTableTable _userIdTable(_$AppDatabase db) =>
-      db.usersTable.createAlias(
-          $_aliasNameGenerator(db.userWordsTable.userId, db.usersTable.id));
-
-  $$UsersTableTableProcessedTableManager? get userId {
-    if ($_item.userId == null) return null;
-    final manager = $$UsersTableTableTableManager($_db, $_db.usersTable)
-        .filter((f) => f.id($_item.userId!));
-    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
 
   static $WordsTableTable _wordIdTable(_$AppDatabase db) =>
       db.wordsTable.createAlias(
-          $_aliasNameGenerator(db.userWordsTable.wordId, db.wordsTable.id));
+          $_aliasNameGenerator(db.favoritesTable.wordId, db.wordsTable.id));
 
   $$WordsTableTableProcessedTableManager? get wordId {
     if ($_item.wordId == null) return null;
@@ -3545,9 +2949,9 @@ final class $$UserWordsTableTableReferences extends BaseReferences<
   }
 }
 
-class $$UserWordsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $UserWordsTableTable> {
-  $$UserWordsTableTableFilterComposer({
+class $$FavoritesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+  $$FavoritesTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3591,9 +2995,6 @@ class $$UserWordsTableTableFilterComposer
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tags => $composableBuilder(
-      column: $table.tags, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
@@ -3603,26 +3004,6 @@ class $$UserWordsTableTableFilterComposer
   ColumnFilters<DateTime> get lastReviewedAt => $composableBuilder(
       column: $table.lastReviewedAt,
       builder: (column) => ColumnFilters(column));
-
-  $$UsersTableTableFilterComposer get userId {
-    final $$UsersTableTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.usersTable,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UsersTableTableFilterComposer(
-              $db: $db,
-              $table: $db.usersTable,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 
   $$WordsTableTableFilterComposer get wordId {
     final $$WordsTableTableFilterComposer composer = $composerBuilder(
@@ -3645,9 +3026,9 @@ class $$UserWordsTableTableFilterComposer
   }
 }
 
-class $$UserWordsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $UserWordsTableTable> {
-  $$UserWordsTableTableOrderingComposer({
+class $$FavoritesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+  $$FavoritesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3693,9 +3074,6 @@ class $$UserWordsTableTableOrderingComposer
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tags => $composableBuilder(
-      column: $table.tags, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -3705,26 +3083,6 @@ class $$UserWordsTableTableOrderingComposer
   ColumnOrderings<DateTime> get lastReviewedAt => $composableBuilder(
       column: $table.lastReviewedAt,
       builder: (column) => ColumnOrderings(column));
-
-  $$UsersTableTableOrderingComposer get userId {
-    final $$UsersTableTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.usersTable,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UsersTableTableOrderingComposer(
-              $db: $db,
-              $table: $db.usersTable,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 
   $$WordsTableTableOrderingComposer get wordId {
     final $$WordsTableTableOrderingComposer composer = $composerBuilder(
@@ -3747,9 +3105,9 @@ class $$UserWordsTableTableOrderingComposer
   }
 }
 
-class $$UserWordsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UserWordsTableTable> {
-  $$UserWordsTableTableAnnotationComposer({
+class $$FavoritesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+  $$FavoritesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3789,9 +3147,6 @@ class $$UserWordsTableTableAnnotationComposer
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
-  GeneratedColumn<String> get tags =>
-      $composableBuilder(column: $table.tags, builder: (column) => column);
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -3800,26 +3155,6 @@ class $$UserWordsTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastReviewedAt => $composableBuilder(
       column: $table.lastReviewedAt, builder: (column) => column);
-
-  $$UsersTableTableAnnotationComposer get userId {
-    final $$UsersTableTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.usersTable,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$UsersTableTableAnnotationComposer(
-              $db: $db,
-              $table: $db.usersTable,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 
   $$WordsTableTableAnnotationComposer get wordId {
     final $$WordsTableTableAnnotationComposer composer = $composerBuilder(
@@ -3842,32 +3177,31 @@ class $$UserWordsTableTableAnnotationComposer
   }
 }
 
-class $$UserWordsTableTableTableManager extends RootTableManager<
+class $$FavoritesTableTableTableManager extends RootTableManager<
     _$AppDatabase,
-    $UserWordsTableTable,
-    UserWordsTableData,
-    $$UserWordsTableTableFilterComposer,
-    $$UserWordsTableTableOrderingComposer,
-    $$UserWordsTableTableAnnotationComposer,
-    $$UserWordsTableTableCreateCompanionBuilder,
-    $$UserWordsTableTableUpdateCompanionBuilder,
-    (UserWordsTableData, $$UserWordsTableTableReferences),
-    UserWordsTableData,
-    PrefetchHooks Function({bool userId, bool wordId})> {
-  $$UserWordsTableTableTableManager(
-      _$AppDatabase db, $UserWordsTableTable table)
+    $FavoritesTableTable,
+    FavoritesTableData,
+    $$FavoritesTableTableFilterComposer,
+    $$FavoritesTableTableOrderingComposer,
+    $$FavoritesTableTableAnnotationComposer,
+    $$FavoritesTableTableCreateCompanionBuilder,
+    $$FavoritesTableTableUpdateCompanionBuilder,
+    (FavoritesTableData, $$FavoritesTableTableReferences),
+    FavoritesTableData,
+    PrefetchHooks Function({bool wordId})> {
+  $$FavoritesTableTableTableManager(
+      _$AppDatabase db, $FavoritesTableTable table)
       : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$UserWordsTableTableFilterComposer($db: db, $table: table),
+              $$FavoritesTableTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$UserWordsTableTableOrderingComposer($db: db, $table: table),
+              $$FavoritesTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$UserWordsTableTableAnnotationComposer($db: db, $table: table),
+              $$FavoritesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<String> userId = const Value.absent(),
             Value<int> wordId = const Value.absent(),
             Value<bool> isFavorited = const Value.absent(),
             Value<int> learningStatus = const Value.absent(),
@@ -3879,14 +3213,12 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
             Value<int> reviewInterval = const Value.absent(),
             Value<double> easeFactor = const Value.absent(),
             Value<String> notes = const Value.absent(),
-            Value<String> tags = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> lastReviewedAt = const Value.absent(),
           }) =>
-              UserWordsTableCompanion(
+              FavoritesTableCompanion(
             id: id,
-            userId: userId,
             wordId: wordId,
             isFavorited: isFavorited,
             learningStatus: learningStatus,
@@ -3898,14 +3230,12 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
             reviewInterval: reviewInterval,
             easeFactor: easeFactor,
             notes: notes,
-            tags: tags,
             createdAt: createdAt,
             updatedAt: updatedAt,
             lastReviewedAt: lastReviewedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required String userId,
             required int wordId,
             Value<bool> isFavorited = const Value.absent(),
             Value<int> learningStatus = const Value.absent(),
@@ -3917,14 +3247,12 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
             Value<int> reviewInterval = const Value.absent(),
             Value<double> easeFactor = const Value.absent(),
             Value<String> notes = const Value.absent(),
-            Value<String> tags = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> lastReviewedAt = const Value.absent(),
           }) =>
-              UserWordsTableCompanion.insert(
+              FavoritesTableCompanion.insert(
             id: id,
-            userId: userId,
             wordId: wordId,
             isFavorited: isFavorited,
             learningStatus: learningStatus,
@@ -3936,7 +3264,6 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
             reviewInterval: reviewInterval,
             easeFactor: easeFactor,
             notes: notes,
-            tags: tags,
             createdAt: createdAt,
             updatedAt: updatedAt,
             lastReviewedAt: lastReviewedAt,
@@ -3944,10 +3271,10 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
           withReferenceMapper: (p0) => p0
               .map((e) => (
                     e.readTable(table),
-                    $$UserWordsTableTableReferences(db, table, e)
+                    $$FavoritesTableTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({userId = false, wordId = false}) {
+          prefetchHooksCallback: ({wordId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3964,24 +3291,14 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (userId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.userId,
-                    referencedTable:
-                        $$UserWordsTableTableReferences._userIdTable(db),
-                    referencedColumn:
-                        $$UserWordsTableTableReferences._userIdTable(db).id,
-                  ) as T;
-                }
                 if (wordId) {
                   state = state.withJoin(
                     currentTable: table,
                     currentColumn: table.wordId,
                     referencedTable:
-                        $$UserWordsTableTableReferences._wordIdTable(db),
+                        $$FavoritesTableTableReferences._wordIdTable(db),
                     referencedColumn:
-                        $$UserWordsTableTableReferences._wordIdTable(db).id,
+                        $$FavoritesTableTableReferences._wordIdTable(db).id,
                   ) as T;
                 }
 
@@ -3995,18 +3312,18 @@ class $$UserWordsTableTableTableManager extends RootTableManager<
         ));
 }
 
-typedef $$UserWordsTableTableProcessedTableManager = ProcessedTableManager<
+typedef $$FavoritesTableTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
-    $UserWordsTableTable,
-    UserWordsTableData,
-    $$UserWordsTableTableFilterComposer,
-    $$UserWordsTableTableOrderingComposer,
-    $$UserWordsTableTableAnnotationComposer,
-    $$UserWordsTableTableCreateCompanionBuilder,
-    $$UserWordsTableTableUpdateCompanionBuilder,
-    (UserWordsTableData, $$UserWordsTableTableReferences),
-    UserWordsTableData,
-    PrefetchHooks Function({bool userId, bool wordId})>;
+    $FavoritesTableTable,
+    FavoritesTableData,
+    $$FavoritesTableTableFilterComposer,
+    $$FavoritesTableTableOrderingComposer,
+    $$FavoritesTableTableAnnotationComposer,
+    $$FavoritesTableTableCreateCompanionBuilder,
+    $$FavoritesTableTableUpdateCompanionBuilder,
+    (FavoritesTableData, $$FavoritesTableTableReferences),
+    FavoritesTableData,
+    PrefetchHooks Function({bool wordId})>;
 typedef $$SearchHistoryTableTableCreateCompanionBuilder
     = SearchHistoryTableCompanion Function({
   Value<int> id,
@@ -4286,8 +3603,8 @@ class $AppDatabaseManager {
       $$WordsTableTableTableManager(_db, _db.wordsTable);
   $$UsersTableTableTableManager get usersTable =>
       $$UsersTableTableTableManager(_db, _db.usersTable);
-  $$UserWordsTableTableTableManager get userWordsTable =>
-      $$UserWordsTableTableTableManager(_db, _db.userWordsTable);
+  $$FavoritesTableTableTableManager get favoritesTable =>
+      $$FavoritesTableTableTableManager(_db, _db.favoritesTable);
   $$SearchHistoryTableTableTableManager get searchHistoryTable =>
       $$SearchHistoryTableTableTableManager(_db, _db.searchHistoryTable);
 }

@@ -5,11 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/route_paths.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/favorites_provider.dart';
 import '../../../shared/providers/locale_provider.dart';
 import '../../../l10n/generated/l10n_simple.dart';
 
-/// 我的页面
+/// 个人设置页面
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
@@ -20,12 +21,12 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
+    final userState = ref.watch(userNotifierProvider);
 
     // 监听 locale 变化以确保页面在语言切换时重建
     ref.watch(localeNotifierProvider);
-    
-    return authState.when(
+
+    return userState.when(
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
@@ -39,162 +40,175 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Text('${S.current.error}: $error'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.refresh(authNotifierProvider),
+                onPressed: () => ref.refresh(userNotifierProvider),
                 child: Text(S.current.retry),
               ),
             ],
           ),
         ),
       ),
-      data: (authState) => _buildContent(context, authState.isAuthenticated),
+      data: (userState) => _buildContent(context),
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isAuthenticated) {
+  Widget _buildContent(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(S.current.profile),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: isAuthenticated 
-            ? _buildAuthenticatedView(context) 
-            : _buildUnauthenticatedView(context),
+        child: _buildUserView(context),
       ),
     );
   }
 
-  /// 构建已登录视图
-  Widget _buildAuthenticatedView(BuildContext context) {
+  /// 构建用户设置视图
+  Widget _buildUserView(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DesignTokens.spacingMedium),
       child: Column(
         children: [
-          // 用户信息卡片
-          _buildUserInfoCard(context, currentUser),
-          
+          // 头像设置卡片
+          _buildAvatarCard(context, currentUser),
+
           const SizedBox(height: DesignTokens.spacingLarge),
-          
-          // 收录单词卡片
-          _buildWordCollectionCard(context),
-          
+
+          // 学习统计卡片
+          _buildLearningStatsCard(context),
+
           const SizedBox(height: DesignTokens.spacingLarge),
-          
-          // 功能列表
-          _buildFunctionsList(context),
+
+          // 应用设置列表
+          _buildSettingsList(context),
         ],
       ),
     );
   }
 
-  /// 构建未登录视图
-  Widget _buildUnauthenticatedView(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spacingLarge),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_outline,
-              size: 80,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: DesignTokens.spacingLarge),
-            
-            Text(
-              S.current.pleaseLogin,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: DesignTokens.spacingMedium),
-            
-            Text(
-              S.current.loginToUseFullFeatures,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: DesignTokens.spacingXLarge),
-            
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.go(RoutePaths.login),
-                child: Text(S.current.login),
-              ),
-            ),
-            
-            const SizedBox(height: DesignTokens.spacingMedium),
-            
-            TextButton(
-              onPressed: () => context.go(RoutePaths.register),
-              child: Text(S.current.registerNowText),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建用户信息卡片
-  Widget _buildUserInfoCard(BuildContext context, user) {
+  /// 构建头像设置卡片
+  Widget _buildAvatarCard(BuildContext context, user) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spacingLarge),
-        child: Row(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          image: user?.avatarPath != null
+              ? DecorationImage(
+                  image: AssetImage(user!.avatarPath!) as ImageProvider,
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: Stack(
           children: [
-            // 头像
-            CircleAvatar(
-              radius: 32,
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              backgroundImage: user?.avatarPath != null 
-                  ? AssetImage(user!.avatarPath!) 
-                  : null,
-              child: user?.avatarPath == null 
-                  ? Text(
-                      user?.name?.substring(0, 1).toUpperCase() ?? 'G',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
-            ),
-            
-            const SizedBox(width: DesignTokens.spacingLarge),
-            
-            // 用户信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user?.name ?? 'Goings',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+            // 背景渐变效果
+            if (user?.avatarPath == null)
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.primaryContainer,
+                      Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.email ?? 'user@example.com',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                ),
+              ),
+
+            // 默认头像文字（当没有头像时）
+            if (user?.avatarPath == null)
+              Center(
+                child: Text(
+                  user?.name.isNotEmpty == true ? user!.name.substring(0, 1).toUpperCase() : '学',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontSize: 64,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
+              ),
+
+            // 半透明渐变遮罩（用于确保文字清晰可见）
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.3),
+                      Colors.black.withOpacity(0.6),
+                    ],
+                    stops: const [0.3, 0.7, 1.0],
+                  ),
+                ),
               ),
             ),
-            
-            // 账号管理按钮
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.push(RoutePaths.accountManagement),
+
+            // 左下角用户名
+            Positioned(
+              left: 16,
+              bottom: 16,
+              child: Text(
+                user?.name.isNotEmpty == true ? user!.name : '学习者',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 1),
+                      blurRadius: 2.0,
+                      color: Colors.black45,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 右上角details按钮
+            Positioned(
+              right: 16,
+              top: 16,
+              child: GestureDetector(
+                onTap: () => _navigateToUserProfile(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    'details',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      shadows: const [
+                        Shadow(
+                          offset: Offset(0, 1),
+                          blurRadius: 2.0,
+                          color: Colors.black45,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -202,10 +216,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  /// 构建收录单词卡片
-  Widget _buildWordCollectionCard(BuildContext context) {
+  /// 构建学习统计卡片
+  Widget _buildLearningStatsCard(BuildContext context) {
     final favoriteWordsCountAsync = ref.watch(favoriteWordsCountProvider);
-    final favoriteWordsAsync = ref.watch(favoriteWordsProvider(limit: 3)); // 获取收藏的单词作为预览
 
     return Card(
       child: Padding(
@@ -213,118 +226,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  S.current.collectedWords,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => context.push(RoutePaths.collectedWords),
-                  child: Text(S.current.viewAll),
-                ),
-              ],
+            Text(
+              '学习统计',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-
             const SizedBox(height: DesignTokens.spacingMedium),
 
-            // 显示收藏统计和预览
+            // 显示收藏统计
             favoriteWordsCountAsync.when(
               data: (count) {
-                if (count == 0) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingLarge),
-                      child: Text(
-                        S.current.noCollectedData,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                return Row(
                   children: [
-                    // 统计信息
-                    Text(
-                      S.current.collectedCountWords(count),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Icon(
+                      Icons.favorite,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-
-                    if (count > 0) ...[
-                      const SizedBox(height: DesignTokens.spacingMedium),
-
-                      // 最近收藏的单词预览
-                      favoriteWordsAsync.when(
-                        data: (words) {
-                          if (words.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                S.current.recentWordsTitle,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: DesignTokens.spacingSmall),
-                              Wrap(
-                                spacing: DesignTokens.spacingSmall,
-                                runSpacing: DesignTokens.spacingSmall,
-                                children: words.take(3).map((word) {
-                                  return Chip(
-                                    label: Text(
-                                      word.headWord,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                    visualDensity: VisualDensity.compact,
-                                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          );
-                        },
-                        loading: () => const SizedBox(
-                          height: 40,
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                        error: (_, __) => Text(
-                          '加载失败',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ),
-                    ],
+                    const SizedBox(width: 12),
+                    Text(
+                      '已收藏 $count 个单词',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
                   ],
                 );
               },
-              loading: () => const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (_, __) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingLarge),
-                  child: Text(
-                    '加载失败',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
+              loading: () => const CircularProgressIndicator(),
+              error: (_, __) => Text(
+                '加载统计失败',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -333,100 +263,100 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-
-  /// 构建功能列表
-  Widget _buildFunctionsList(BuildContext context) {
+  /// 构建应用设置列表
+  Widget _buildSettingsList(BuildContext context) {
     return Card(
       child: Column(
         children: [
-          _buildListTile(
-            context,
-            icon: Icons.history,
-            title: S.current.learningRecordTitle,
-            subtitle: S.current.learningRecordSubtitle,
-            onTap: () {
-              // TODO: 跳转到学习记录页面
-            },
+          ListTile(
+            leading: Icon(Icons.bookmark_border_outlined),
+            title: Text(S.current.myFavorites),
+            onTap: () => context.push(RoutePaths.collectedWords),
           ),
-          
           const Divider(height: 1),
-          
-          _buildListTile(
-            context,
-            icon: Icons.trending_up,
-            title: S.current.learningStatsTitle,
-            subtitle: S.current.learningStatsSubtitle,
-            onTap: () {
-              // TODO: 跳转到学习统计页面
-            },
+          ListTile(
+            leading: Icon(Icons.school_outlined),
+            title: Text(S.current.learningMode),
+            onTap: () => context.push(RoutePaths.learning),
           ),
-          
           const Divider(height: 1),
-          
-          _buildListTile(
-            context,
-            icon: Icons.backup,
-            title: S.current.dataBackupTitle,
-            subtitle: S.current.dataBackupSubtitle,
-            onTap: () {
-              // TODO: 实现数据备份功能
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(S.current.featureNotImplemented)),
-              );
-            },
+          ListTile(
+            leading: Icon(Icons.info_outline),
+            title: Text(S.current.aboutApp),
+            onTap: () => _showAboutDialog(context),
           ),
-          
-          const Divider(height: 1),
-          
-          _buildListTile(
-            context,
-            icon: Icons.help_outline,
-            title: S.current.helpAndFeedbackTitle,
-            subtitle: S.current.helpAndFeedbackSubtitle,
-            onTap: () {
-              // TODO: 跳转到帮助页面
-            },
-          ),
-          
-          const Divider(height: 1),
-          
-          _buildListTile(
-            context,
-            icon: Icons.info_outline,
-            title: S.current.aboutTitle,
-            subtitle: S.current.aboutSubtitle,
-            onTap: () {
-              // TODO: 显示关于对话框
-              _showAboutDialog(context);
-            },
-          ),
-          
         ],
       ),
     );
   }
 
-  /// 构建列表项
-  Widget _buildListTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    Color? titleColor,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(
-        title,
-        style: titleColor != null 
-            ? TextStyle(color: titleColor) 
-            : null,
+  /// 显示头像选择选项
+  void _showAvatarOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(S.current.fromGallery),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: 实现从相册选择头像
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.current.featureInDevelopment)),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(S.current.takePhoto),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: 实现拍照头像
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.current.featureInDevelopment)),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text(S.current.removeAvatar),
+              onTap: () {
+                Navigator.pop(context);
+                _removeAvatar();
+              },
+            ),
+          ],
+        ),
       ),
-      subtitle: subtitle != null ? Text(subtitle) : null,
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
+  }
+
+  /// 移除头像
+  void _removeAvatar() async {
+    try {
+      await ref.read(userNotifierProvider.notifier).updateProfile(
+        UpdateProfileRequest(avatarPath: null),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.current.avatarRemoved)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${S.current.operationFailed}: $e')),
+        );
+      }
+    }
+  }
+
+  /// 导航到用户详情页
+  void _navigateToUserProfile(BuildContext context) {
+    context.push('/user-profile');
   }
 
   /// 显示关于对话框
@@ -437,10 +367,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       applicationVersion: '1.0.0',
       applicationIcon: const Icon(Icons.book, size: 48),
       children: [
-        Text(S.current.appSubtitle),
-        Text(S.current.appSubtitle),
+        Text(S.current.appDescription),
       ],
     );
   }
-
 }

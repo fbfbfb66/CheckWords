@@ -1,19 +1,15 @@
 import 'package:drift/drift.dart';
 
-import 'users_table.dart';
 import 'words_table.dart';
 
-/// 用户单词关系表 (收藏、学习记录等)
-@DataClassName('UserWordsTableData')
-class UserWordsTable extends Table {
+/// 收藏单词表 (全局收藏，不关联用户)
+@DataClassName('FavoritesTableData')
+class FavoritesTable extends Table {
   @override
-  String get tableName => 'user_words_table';
+  String get tableName => 'favorites_table';
 
   /// 主键ID
   IntColumn get id => integer().autoIncrement()();
-
-  /// 用户ID
-  TextColumn get userId => text().references(UsersTable, #id, onDelete: KeyAction.cascade)();
 
   /// 单词ID
   IntColumn get wordId => integer().references(WordsTable, #id, onDelete: KeyAction.cascade)();
@@ -45,11 +41,8 @@ class UserWordsTable extends Table {
   /// 难度因子 (SuperMemo算法使用)
   RealColumn get easeFactor => real().withDefault(const Constant(2.5))();
 
-  /// 用户笔记
+  /// 学习笔记
   TextColumn get notes => text().withDefault(const Constant(''))();
-
-  /// 标签 (JSON数组)
-  TextColumn get tags => text().withDefault(const Constant('[]'))();
 
   /// 添加到收藏的时间
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -60,11 +53,9 @@ class UserWordsTable extends Table {
   /// 最后复习时间
   DateTimeColumn get lastReviewedAt => dateTime().nullable()();
 
-  // 不需要重写primaryKey，因为id已经是autoIncrement
-
   @override
   List<Set<Column>> get uniqueKeys => [
-    {userId, wordId},
+    {wordId},
   ];
 }
 

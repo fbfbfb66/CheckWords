@@ -50,12 +50,12 @@ class _LearningPageState extends ConsumerState<LearningPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+    final hasUser = ref.watch(hasUserProvider);
 
     // 监听 locale 变化以确保页面在语言切换时重建
     ref.watch(localeNotifierProvider);
 
-    if (!isAuthenticated) {
+    if (!hasUser) {
       return Scaffold(
         appBar: AppBar(
           title: Text(S.current.learningWords),
@@ -308,7 +308,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
                 onPressed: () {
                   ref.read(learningSessionProvider.notifier).restartLearning();
                 },
-                child: const Text('继续学习'),
+                child: Text(S.current.continueLearning),
               ),
             ),
             const SizedBox(height: DesignTokens.spacingMedium),
@@ -316,7 +316,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: _exitLearning,
-                child: const Text('返回'),
+                child: Text(S.current.back),
               ),
             ),
           ],
@@ -378,7 +378,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
                         .read(learningSessionProvider.notifier)
                         .resetMasteredFavorites();
                   },
-                  child: const Text('重新开始学习'),
+                  child: Text(S.current.restartLearning),
                 ),
               ),
               const SizedBox(height: DesignTokens.spacingMedium),
@@ -387,7 +387,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: _exitLearning,
-                child: const Text('返回'),
+                child: Text(S.current.back),
               ),
             ),
           ],
@@ -428,7 +428,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: _exitLearning,
-                child: const Text('返回'),
+                child: Text(S.current.back),
               ),
             ),
           ],
@@ -450,12 +450,12 @@ class _LearningPageState extends ConsumerState<LearningPage> {
     showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('确认退出'),
-        content: const Text('确定要退出学习吗？当前进度将会保存。'),
+        title: Text(S.current.confirmExit),
+        content: Text(S.current.exitLearningMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -467,7 +467,7 @@ class _LearningPageState extends ConsumerState<LearningPage> {
               });
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('退出'),
+            child: Text(S.current.logout),
           ),
         ],
       ),

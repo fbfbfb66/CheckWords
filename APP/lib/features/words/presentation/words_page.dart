@@ -28,6 +28,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
 
   List<String> _searchHistory = [];
   String _currentQuery = '';
+  bool _hasSubmittedSearch = false;
 
   @override
   void initState() {
@@ -57,7 +58,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
           builder: (context, ref, child) {
             // 监听 locale 变化
             ref.watch(localeNotifierProvider);
-            return Text('CheckWords');
+            return Text(S.current.appTitle);
           },
         ),
         centerTitle: true,
@@ -154,7 +155,6 @@ class _WordsPageState extends ConsumerState<WordsPage> {
   }
 
   Widget _buildSearchResults() {
-    final searchResultsAsync = ref.watch(searchWordsProvider(_currentQuery));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,24 +164,59 @@ class _WordsPageState extends ConsumerState<WordsPage> {
             horizontal: DesignTokens.spacingMedium,
             vertical: DesignTokens.spacingSmall,
           ),
-          child: Text(
-            S.current.searchResultsFor(_currentQuery),
-            style: Theme.of(context).textTheme.titleMedium,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.current.searchResultsFor(_currentQuery),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _hasSubmittedSearch ? '精确匹配模式' : '智能推荐模式',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: _hasSubmittedSearch
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
-          child: searchResultsAsync.when(
-            data: (words) {
-              if (words.isEmpty) {
-                return _buildNoResultsView(_currentQuery);
-              }
-              return _buildWordsList(words);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _buildErrorView(error.toString()),
-          ),
+          child: _hasSubmittedSearch
+            ? _buildExactSearchResults()
+            : _buildNormalSearchResults(),
         ),
       ],
+    );
+  }
+
+  Widget _buildNormalSearchResults() {
+    final searchResultsAsync = ref.watch(searchWordsProvider(_currentQuery));
+    return searchResultsAsync.when(
+      data: (words) {
+        if (words.isEmpty) {
+          return _buildNoResultsView(_currentQuery);
+        }
+        return _buildWordsList(words);
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildErrorView(error.toString()),
+    );
+  }
+
+  Widget _buildExactSearchResults() {
+    final exactSearchResultAsync = ref.watch(exactSearchWordsProvider(_currentQuery));
+    return exactSearchResultAsync.when(
+      data: (word) {
+        if (word == null) {
+          return _buildExactNoResultsView(_currentQuery);
+        }
+        return _buildWordsList([word]);
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildErrorView(error.toString()),
     );
   }
 
@@ -497,6 +532,59 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     );
   }
 
+  Widget _buildExactNoResultsView(String query) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DesignTokens.spacingLarge),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.find_in_page,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: DesignTokens.spacingMedium),
+              Text(
+                '未找到精确匹配的单词',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: DesignTokens.spacingSmall),
+              Text(
+                '没有找到完全等于 "$query" 的单词',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: DesignTokens.spacingMedium),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '精确匹配搜索提示：',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: DesignTokens.spacingXSmall),
+                  Text('· 精确匹配要求完全相同的拼写', style: _buildHintTextStyle()),
+                  Text('· 请检查单词大小写和拼写', style: _buildHintTextStyle()),
+                  Text('· 尝试删除输入重新获取智能推荐', style: _buildHintTextStyle()),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildErrorView(String error) {
     return Center(
       child: Padding(
@@ -526,6 +614,11 @@ class _WordsPageState extends ConsumerState<WordsPage> {
 
   void _handleSearchChanged(String value) {
     final trimmed = value.trim();
+    // 当用户修改输入时，重置为实时搜索模式
+    setState(() {
+      _hasSubmittedSearch = false;
+    });
+
     if (trimmed.length >= 2) {
       setState(() {
         _currentQuery = trimmed;
@@ -533,6 +626,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     } else if (trimmed.isEmpty) {
       setState(() {
         _currentQuery = '';
+        _hasSubmittedSearch = false;
       });
     }
   }
@@ -542,6 +636,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     if (query.isNotEmpty) {
       setState(() {
         _currentQuery = query;
+        _hasSubmittedSearch = true; // 标记为已提交搜索（精确搜索模式）
       });
     }
   }
@@ -550,6 +645,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     setState(() {
       _currentQuery = '';
       _searchController.clear();
+      _hasSubmittedSearch = false; // 重置搜索模式
     });
   }
 
@@ -557,6 +653,7 @@ class _WordsPageState extends ConsumerState<WordsPage> {
     _searchController.text = word;
     setState(() {
       _currentQuery = word;
+      _hasSubmittedSearch = false; // 从历史记录搜索时使用实时搜索
     });
   }
 

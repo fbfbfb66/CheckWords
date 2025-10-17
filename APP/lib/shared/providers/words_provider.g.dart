@@ -6,7 +6,7 @@ part of 'words_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wordByIdHash() => r'fb72e700774cbc8d215c24ade2cf2515698c5565';
+String _$wordByIdHash() => r'8f70bbd6499114bb1f711b2cc88d97ba881a071f';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -166,7 +166,7 @@ class _WordByIdProviderElement
   int get wordId => (origin as WordByIdProvider).wordId;
 }
 
-String _$databaseStatusHash() => r'4f11a3e8d0a9f8c6927f5f3679ceae04eab65ef8';
+String _$databaseStatusHash() => r'0625f159e294af8c39079c607dd9ff8efc7e2e8f';
 
 /// 检查数据库状态（调试用）
 ///
@@ -184,7 +184,7 @@ final databaseStatusProvider =
 );
 
 typedef DatabaseStatusRef = AutoDisposeFutureProviderRef<DatabaseStatus>;
-String _$wordByNameHash() => r'd00e893d28f04e279c0ff854bf36b9823d78cee3';
+String _$wordByNameHash() => r'45bb551baf59c7be435aa7b3b352c861d475dab6';
 
 /// 根据单词名称获取单词详情
 ///
@@ -480,6 +480,147 @@ class _SearchWordsProviderElement
   String get query => (origin as SearchWordsProvider).query;
   @override
   int get limit => (origin as SearchWordsProvider).limit;
+}
+
+String _$exactSearchWordsHash() => r'618ea10eaf287f82b29aecae0f5279b5b23eee67';
+
+/// 精确搜索单词（点击搜索按钮后使用）
+///
+/// Copied from [exactSearchWords].
+@ProviderFor(exactSearchWords)
+const exactSearchWordsProvider = ExactSearchWordsFamily();
+
+/// 精确搜索单词（点击搜索按钮后使用）
+///
+/// Copied from [exactSearchWords].
+class ExactSearchWordsFamily extends Family<AsyncValue<WordModel?>> {
+  /// 精确搜索单词（点击搜索按钮后使用）
+  ///
+  /// Copied from [exactSearchWords].
+  const ExactSearchWordsFamily();
+
+  /// 精确搜索单词（点击搜索按钮后使用）
+  ///
+  /// Copied from [exactSearchWords].
+  ExactSearchWordsProvider call(
+    String query,
+  ) {
+    return ExactSearchWordsProvider(
+      query,
+    );
+  }
+
+  @override
+  ExactSearchWordsProvider getProviderOverride(
+    covariant ExactSearchWordsProvider provider,
+  ) {
+    return call(
+      provider.query,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'exactSearchWordsProvider';
+}
+
+/// 精确搜索单词（点击搜索按钮后使用）
+///
+/// Copied from [exactSearchWords].
+class ExactSearchWordsProvider extends AutoDisposeFutureProvider<WordModel?> {
+  /// 精确搜索单词（点击搜索按钮后使用）
+  ///
+  /// Copied from [exactSearchWords].
+  ExactSearchWordsProvider(
+    String query,
+  ) : this._internal(
+          (ref) => exactSearchWords(
+            ref as ExactSearchWordsRef,
+            query,
+          ),
+          from: exactSearchWordsProvider,
+          name: r'exactSearchWordsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$exactSearchWordsHash,
+          dependencies: ExactSearchWordsFamily._dependencies,
+          allTransitiveDependencies:
+              ExactSearchWordsFamily._allTransitiveDependencies,
+          query: query,
+        );
+
+  ExactSearchWordsProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.query,
+  }) : super.internal();
+
+  final String query;
+
+  @override
+  Override overrideWith(
+    FutureOr<WordModel?> Function(ExactSearchWordsRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: ExactSearchWordsProvider._internal(
+        (ref) => create(ref as ExactSearchWordsRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        query: query,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<WordModel?> createElement() {
+    return _ExactSearchWordsProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ExactSearchWordsProvider && other.query == query;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, query.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin ExactSearchWordsRef on AutoDisposeFutureProviderRef<WordModel?> {
+  /// The parameter `query` of this provider.
+  String get query;
+}
+
+class _ExactSearchWordsProviderElement
+    extends AutoDisposeFutureProviderElement<WordModel?>
+    with ExactSearchWordsRef {
+  _ExactSearchWordsProviderElement(super.provider);
+
+  @override
+  String get query => (origin as ExactSearchWordsProvider).query;
 }
 
 String _$fuzzySearchWordsHash() => r'c6155fdb513445d9013e37aac5256113781ecac5';
@@ -782,24 +923,24 @@ class _PopularWordsProviderElement
   int get limit => (origin as PopularWordsProvider).limit;
 }
 
-String _$wordsByLevelHash() => r'62e4b5b472d6f3b12e0b36b48909a85d30b80bba';
+String _$wordsByLevelHash() => r'cb2ba731c582eda7756ba4e05e394b9ef6ba9b63';
 
-/// 根据等级获取单词
+/// 根据级别获取单词
 ///
 /// Copied from [wordsByLevel].
 @ProviderFor(wordsByLevel)
 const wordsByLevelProvider = WordsByLevelFamily();
 
-/// 根据等级获取单词
+/// 根据级别获取单词
 ///
 /// Copied from [wordsByLevel].
 class WordsByLevelFamily extends Family<AsyncValue<List<WordModel>>> {
-  /// 根据等级获取单词
+  /// 根据级别获取单词
   ///
   /// Copied from [wordsByLevel].
   const WordsByLevelFamily();
 
-  /// 根据等级获取单词
+  /// 根据级别获取单词
   ///
   /// Copied from [wordsByLevel].
   WordsByLevelProvider call(
@@ -837,11 +978,11 @@ class WordsByLevelFamily extends Family<AsyncValue<List<WordModel>>> {
   String? get name => r'wordsByLevelProvider';
 }
 
-/// 根据等级获取单词
+/// 根据级别获取单词
 ///
 /// Copied from [wordsByLevel].
 class WordsByLevelProvider extends AutoDisposeFutureProvider<List<WordModel>> {
-  /// 根据等级获取单词
+  /// 根据级别获取单词
   ///
   /// Copied from [wordsByLevel].
   WordsByLevelProvider(

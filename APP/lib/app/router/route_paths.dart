@@ -2,11 +2,6 @@
 class RoutePaths {
   RoutePaths._();
 
-  // === 认证相关路由 ===
-  static const String login = '/login';
-  static const String register = '/register';
-  static const String forgotPassword = '/forgot-password';
-
   // === 主要页面路由 ===
   static const String home = '/';
   static const String words = '/words';
@@ -15,9 +10,9 @@ class RoutePaths {
 
   // === 详情页面路由 ===
   static const String wordDetail = '/word/:id';
-  static const String accountManagement = '/account';
   static const String collectedWords = '/collected-words';
   static const String learning = '/learning';
+  static const String userProfile = '/user-profile';
 
   // === 路由构建辅助方法 ===
   
@@ -45,11 +40,6 @@ class RoutePaths {
 class RouteNames {
   RouteNames._();
 
-  // === 认证相关路由名称 ===
-  static const String login = 'login';
-  static const String register = 'register';
-  static const String forgotPassword = 'forgotPassword';
-
   // === 主要页面路由名称 ===
   static const String home = 'home';
   static const String words = 'words';
@@ -58,9 +48,9 @@ class RouteNames {
 
   // === 详情页面路由名称 ===
   static const String wordDetail = 'wordDetail';
-  static const String accountManagement = 'accountManagement';
   static const String collectedWords = 'collectedWords';
   static const String learning = 'learning';
+  static const String userProfile = 'userProfile';
 }
 
 /// 底部导航栏标签枚举

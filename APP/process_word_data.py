@@ -608,5 +608,58 @@ def main():
     print("独立数据库文件位于: assets/data/db/")
     print("汇总数据库文件位于: assets/data/main.db")
 
+    # 自动升级版本号
+    if total_merged > 0:
+        print("\n🔄 正在自动升级应用版本号...")
+        new_version = update_version_number()
+        if new_version:
+            print(f"🚀 下次启动应用时将自动导入新数据！")
+            print(f"📱 请重启应用以使用新的词汇数据。")
+        else:
+            print("⚠️  版本号升级失败，请手动修改Dart文件中的版本号")
+    else:
+        print("\n💡 没有新数据合并，版本号保持不变")
+
+def update_version_number():
+    """
+    自动升级Dart文件中的版本号
+    """
+    dart_file_path = 'lib/core/services/data_import_service.dart'
+
+    try:
+        with open(dart_file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        # 查找当前版本号
+        import re
+        version_pattern = r'static const int _currentImportVersion = (\d+);'
+        match = re.search(version_pattern, content)
+
+        if match:
+            current_version = int(match.group(1))
+            new_version = current_version + 1
+
+            # 替换版本号
+            new_content = re.sub(
+                version_pattern,
+                f'static const int _currentImportVersion = {new_version};',
+                content
+            )
+
+            # 保存文件
+            with open(dart_file_path, 'w', encoding='utf-8') as file:
+                file.write(new_content)
+
+            print(f"✅ 版本号已自动升级: {current_version} → {new_version}")
+            print(f"📝 已更新文件: {dart_file_path}")
+            return new_version
+        else:
+            print("❌ 未找到版本号定义，请检查Dart文件")
+            return None
+
+    except Exception as e:
+        print(f"❌ 更新版本号失败: {e}")
+        return None
+
 if __name__ == "__main__":
     main()

@@ -18,7 +18,7 @@ part 'app_database.g.dart';
   tables: [
     WordsTable,
     UsersTable,
-    UserWordsTable,
+    FavoritesTable,
     SearchHistoryTable,
   ],
 )
@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 11; // 🚨 升级到版本11：强制重新创建数据库结构
+  int get schemaVersion => 13; // 🚨 升级到版本13：进一步简化用户系统，改为全局收藏
 
   @override
   MigrationStrategy get migration {
@@ -89,10 +89,9 @@ class AppDatabase extends _$AppDatabase {
             'CREATE INDEX idx_words_book_id ON words_table(book_id ASC);');
         await customStatement(
             'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
+        // 修复：user_words_table已不存在，改为favorites_table的索引
         await customStatement(
-            'CREATE INDEX idx_user_words_user_id ON user_words_table(user_id);');
-        await customStatement(
-            'CREATE INDEX idx_user_words_word_id ON user_words_table(word_id);');
+            'CREATE INDEX idx_favorites_word_id ON favorites_table(word_id);');
         await customStatement(
             'CREATE INDEX idx_search_history_user_id ON search_history_table(user_id);');
         await customStatement(
@@ -484,6 +483,35 @@ class AppDatabase extends _$AppDatabase {
               'CREATE INDEX idx_words_head_word ON words_table(head_word ASC);');
 
           print('🚨🚨🚨 [Database] 版本11升级完成：数据库结构已完全重建，包含独立发音字段');
+        }
+
+        // 从版本11升级到版本12：简化用户表结构，移除登录系统
+        if (from <= 11 && to >= 12) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本12：简化用户表结构！🚨🚨🚨');
+
+          // 由于表结构发生重大变化，需要重建用户表
+          await customStatement('DROP TABLE IF EXISTS users_table');
+
+          // 重新创建用户表（新结构）
+          await m.createTable(usersTable);
+
+          print('🚨🚨🚨 [Database] 版本12升级完成：用户表结构已简化，移除登录相关字段');
+        }
+
+        // 从版本12升级到版本13：进一步简化用户系统，改为全局收藏
+        if (from <= 12 && to >= 13) {
+          print('🚨🚨🚨 [Database] 升级数据库到版本13：改为全局收藏系统！🚨🚨🚨');
+
+          // 删除旧的user_words表，创建新的favorites表
+          await customStatement('DROP TABLE IF EXISTS user_words_table');
+
+          // 重新创建用户表（新结构）
+          await m.createTable(usersTable);
+
+          // 创建新的收藏表
+          await m.createTable(favoritesTable);
+
+          print('🚨🚨🚨 [Database] 版本13升级完成：已改为全局收藏系统');
         }
       },
       beforeOpen: (details) async {

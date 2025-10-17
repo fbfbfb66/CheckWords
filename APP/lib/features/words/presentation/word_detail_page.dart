@@ -61,14 +61,14 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
         child: wordAsync.when(
           data: (word) {
             if (word == null) {
-              return const Center(
-                child: Text('未找到该单词'),
+              return Center(
+                child: Text(S.current.wordNotFound),
               );
             }
             // 添加额外的安全检查
             if (word.headWord.isEmpty) {
-              return const Center(
-                child: Text('单词数据不完整'),
+              return Center(
+                child: Text(S.current.wordDataIncomplete),
               );
             }
             return _buildSafeWordContent(word);
@@ -86,11 +86,11 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                   color: Colors.grey,
                 ),
                 const SizedBox(height: 16),
-                Text('加载失败: ${error.toString()}'),
+                Text('${S.current.loadFailed}: ${error.toString()}'),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => ref.refresh(wordByIdProvider(widget.wordId)),
-                  child: const Text('重试'),
+                  child: Text(S.current.retry),
                 ),
               ],
             ),
@@ -127,7 +127,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('页面渲染出现问题，显示简化版本'),
+                    content: Text(S.current.renderIssue),
                     duration: const Duration(seconds: 2),
                     backgroundColor: Colors.orange,
                     action: SnackBarAction(
@@ -189,10 +189,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
             // 单词头部：单词、音标、收藏按钮
             _buildWordHeader(word),
             const SizedBox(height: DesignTokens.spacingLarge),
-            // 分类和排名信息
-            _buildWordMeta(word),
-            const SizedBox(height: DesignTokens.spacingLarge),
-            // 词性释义
+              // 词性释义
             _buildTransSection(word),
             const SizedBox(height: DesignTokens.spacingLarge),
             // 例句
@@ -214,10 +211,6 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
             if (word.relWords.isNotEmpty) ...[
               _buildRelWordsSection(word),
               const SizedBox(height: DesignTokens.spacingLarge),
-            ],
-            // 考试题目
-            if (word.exams.isNotEmpty) ...[
-              _buildExamsSection(word),
             ],
                 ],
               ),
@@ -262,7 +255,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('美音: ', style: TextStyle(fontSize: 12)),
+                              Text(S.current.usPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                               Flexible(
                                 child: Text(
                                   word.usPhone!,
@@ -292,7 +285,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('英音: ', style: TextStyle(fontSize: 12)),
+                              Text(S.current.ukPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                               Flexible(
                                 child: Text(
                                   word.ukPhone!,
@@ -334,49 +327,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     );
   }
 
-  /// 构建单词元信息
-  Widget _buildWordMeta(WordModel word) {
-    final BuildContext context = this.context;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spacingMedium),
-        child: Row(
-          children: [
-            // 书籍ID/分类
-            Chip(
-              label: Text(
-                _getCategoryName(word.bookId),
-                style: const TextStyle(fontSize: 12),
-              ),
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            ),
-            const SizedBox(width: DesignTokens.spacingSmall),
-
-            // 排名
-            Chip(
-              label: Text(
-                '排名: ${word.wordRank}',
-                style: const TextStyle(fontSize: 12),
-              ),
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 从bookId获取分类名称
-  String _getCategoryName(String bookId) {
-    if (bookId.contains('CET4')) return 'CET4';
-    if (bookId.contains('CET6')) return 'CET6';
-    if (bookId.contains('考研') || bookId.contains('KAUYAN')) return '考研';
-    if (bookId.contains('IELTS')) return '雅思';
-    if (bookId.contains('TOEFL')) return '托福';
-    if (bookId.contains('GRE')) return 'GRE';
-    return bookId;
-  }
-
+  
   /// 构建主要释义部分（核心信息）
   Widget _buildTransSection(WordModel word) {
     final BuildContext context = this.context;
@@ -576,7 +527,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
               Icons.format_quote,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('例句'),
+            title: Text(S.current.examples),
           ),
           
           const Divider(height: 1),
@@ -640,22 +591,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
 
   /// 构建收藏按钮
   Widget _buildFavoriteButton(WordModel word) {
-    final isAuthenticated = ref.watch(isAuthenticatedProvider);
-
-    if (!isAuthenticated) {
-      return SizedBox(
-        width: 40,
-        height: 40,
-        child: IconButton(
-          icon: const Icon(Icons.favorite_border, size: 24),
-          onPressed: () => _showLoginRequiredDialog(),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-      );
-    }
-
-    // 用户已登录，显示真实的收藏状态
+    // 现在不需要登录，直接显示收藏状态
     final favoriteToggleAsync = ref.watch(favoriteToggleProvider(word.id));
 
     return favoriteToggleAsync.when(
@@ -696,17 +632,10 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
 
   /// 切换收藏状态
   void _toggleFavorite(WordModel word) async {
-    final isAuthenticated = ref.read(isAuthenticatedProvider);
-    
-    if (!isAuthenticated) {
-      _showLoginRequiredDialog();
-      return;
-    }
-
     try {
       final toggleNotifier = ref.read(favoriteToggleProvider(word.id).notifier);
       final newState = await toggleNotifier.toggle();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -719,36 +648,12 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('操作失败: $e'),
+            content: Text('${S.current.operationFailed}: $e'),
             duration: const Duration(seconds: 2),
           ),
         );
       }
     }
-  }
-
-  /// 显示需要登录的提示对话框
-  void _showLoginRequiredDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('需要登录'),
-        content: const Text('收藏单词需要登录账户，是否前往登录？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.push(RoutePaths.login);
-            },
-            child: const Text('去登录'),
-          ),
-        ],
-      ),
-    );
   }
 
   /// 添加搜索历史项
@@ -980,102 +885,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     );
   }
 
-  /// 构建考试题目部分
-  Widget _buildExamsSection(WordModel word) {
-    final BuildContext context = this.context;
-    return CollapsibleSection(
-      title: '考试题目',
-      count: word.exams.length,
-      icon: Icons.quiz,
-      initiallyExpanded: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '共 ${word.exams.length} 道题目',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: DesignTokens.spacingMedium),
-          ElevatedButton.icon(
-            onPressed: () => _showExamDialog(word),
-            icon: const Icon(Icons.quiz, size: 16),
-            label: const Text('开始测试', style: TextStyle(fontSize: 12)),
-          ),
-          const SizedBox(height: DesignTokens.spacingMedium),
-          // 显示题目预览（只显示题目类型）
-          ...word.exams.asMap().entries.map((entry) {
-            final index = entry.key;
-            final exam = entry.value;
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index < word.exams.length - 1 ? DesignTokens.spacingSmall : 0,
-              ),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(DesignTokens.spacingSmall),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.help_outline,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: DesignTokens.spacingSmall),
-                    Expanded(
-                      child: Text(
-                        '题目 ${index + 1}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DesignTokens.spacingSmall,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
-                      ),
-                      child: Text(
-                        '类型 ${exam.examType}',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  /// 显示考试题目对话框
-  void _showExamDialog(WordModel word) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('考试题目'),
-        content: const Text('考试题目功能正在开发中...'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
   /// 构建简化的单词内容（作为fallback）
   Widget _buildFallbackWordContent(WordModel word) {
     final BuildContext context = this.context;
@@ -1114,12 +924,12 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                           Wrap(
                             children: [
                               if (word.usPhone != null) ...[
-                                const Text('美音: ', style: TextStyle(fontSize: 12)),
+                                Text(S.current.usPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                                 Text(word.usPhone!, style: const TextStyle(fontSize: 12)),
                                 const SizedBox(width: 16),
                               ],
                               if (word.ukPhone != null) ...[
-                                const Text('英音: ', style: TextStyle(fontSize: 12)),
+                                Text(S.current.ukPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                                 Text(word.ukPhone!, style: const TextStyle(fontSize: 12)),
                               ],
                             ],
@@ -1178,7 +988,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
               Wrap(
                 children: [
                   if (word.usPhone != null) ...[
-                    const Text('美音: ', style: TextStyle(fontSize: 12)),
+                    Text(S.current.usPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                     Text(word.usPhone!, style: const TextStyle(fontSize: 12)),
                     const SizedBox(width: 16),
                     // 美音播放按钮
@@ -1193,7 +1003,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                     const SizedBox(width: 16),
                   ],
                   if (word.ukPhone != null) ...[
-                    const Text('英音: ', style: TextStyle(fontSize: 12)),
+                    Text(S.current.ukPronunciation + ': ', style: const TextStyle(fontSize: 12)),
                     Text(word.ukPhone!, style: const TextStyle(fontSize: 12)),
                     const SizedBox(width: 16),
                     // 英音播放按钮
@@ -1237,7 +1047,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('正在播放 ${type == 'us' ? '美式' : '英式'} 发音'),
+            content: Text(S.current.playingPronunciation.replaceAll('{type}', type == 'us' ? S.current.usPronunciation : S.current.ukPronunciation)),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -1246,7 +1056,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('播放失败: $e'),
+            content: Text('${S.current.playbackFailed}: $e'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1274,7 +1084,7 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: const Text('返回'),
+                child: Text(S.current.back),
               ),
             ],
           ),
@@ -1306,14 +1116,14 @@ class _WordDetailPageState extends ConsumerState<WordDetailPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('渲染错误'),
+        title: Text(S.current.renderError),
         content: SingleChildScrollView(
           child: Text(error),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),

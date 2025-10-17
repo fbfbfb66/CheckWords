@@ -406,6 +406,38 @@ class S {
   String get emailSentInstructions => _translate('emailSentInstructions') ?? '• 请检查您的收件箱和垃圾邮件箱\n• 重置链接将在24小时内有效\n• 如果未收到邮件，请检查邮箱地址是否正确';
   String get resendEmail => _translate('resendEmail') ?? '重新发送';
 
+  // 新增的翻译条目
+  String get myProfile => _translate('myProfile') ?? '我的';
+  String get learningMode => _translate('learningMode') ?? '学习模式';
+  String get aboutApp => _translate('aboutApp') ?? '关于应用';
+  String get removeAvatar => _translate('removeAvatar') ?? '移除头像';
+  String get avatarRemoved => _translate('avatarRemoved') ?? '头像已移除';
+  String get appDescription => _translate('appDescription') ?? '一个简洁的离线英语单词学习应用';
+  String get featureInDevelopment => _translate('featureInDevelopment') ?? '功能开发中...';
+  String get userProfile => _translate('userProfile') ?? '个人资料';
+  String get userDataLoadFailed => _translate('userDataLoadFailed') ?? '用户数据加载失败';
+  String get selectImageFailed => _translate('selectImageFailed') ?? '选择图片失败';
+  String get takePhotoFailed => _translate('takePhotoFailed') ?? '拍照失败';
+  String get removeAvatarFailed => _translate('removeAvatarFailed') ?? '移除头像失败';
+  String get usernameEmpty => _translate('usernameEmpty') ?? '用户名不能为空';
+  String get usernameUpdateSuccess => _translate('usernameUpdateSuccess') ?? '用户名更新成功';
+  String get usernameUpdateFailed => _translate('usernameUpdateFailed') ?? '用户名更新失败';
+  String get enterUsername => _translate('enterUsername') ?? '请输入用户名';
+  String get wordNotFound => _translate('wordNotFound') ?? '未找到该单词';
+  String get wordDataIncomplete => _translate('wordDataIncomplete') ?? '单词数据不完整';
+  String get renderError => _translate('renderError') ?? '渲染错误';
+  String get renderIssue => _translate('renderIssue') ?? '页面渲染出现问题，显示简化版本';
+  String get usPronunciation => _translate('usPronunciation') ?? '美音';
+  String get ukPronunciation => _translate('ukPronunciation') ?? '英音';
+  String get playingPronunciation => _translate('playingPronunciation') ?? '正在播放{type}发音';
+  String get playbackFailed => _translate('playbackFailed') ?? '播放失败';
+  String get exitLearningMessage => _translate('exitLearningMessage') ?? '确定要退出学习吗？当前进度将会保存。';
+  String get collect => _translate('collect') ?? '收录';
+  String get clearDataWarning => _translate('clearDataWarning') ?? '此操作将清除所有本地数据，包括收藏的单词、学习记录等，且无法恢复。确定要继续吗？';
+  String get learner => _translate('learner') ?? '学习者';
+  String get myFavorites => _translate('myFavorites') ?? '我的收藏';
+  String get fromGallery => _translate('fromGallery') ?? '从相册选择';
+
   // 格式化方法
   String searchResultsFor(String query) => _translate('searchResultsFor')?.replaceAll('{query}', query) ?? '搜索 "$query" 的结果';
   String noWordsFoundForQuery(String query) => _translate('noWordsFoundForQuery')?.replaceAll('{query}', query) ?? '没有找到与 "$query" 相关的单词';

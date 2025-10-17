@@ -6,7 +6,7 @@ part of 'favorites_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$isWordFavoritedHash() => r'36646a17f67280318998b94701008821a267208e';
+String _$isWordFavoritedHash() => r'809a1572b5ff78eb20ab89f4c8ea2f209571c833';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,22 +29,22 @@ class _SystemHash {
   }
 }
 
-/// 检查单词是否被收藏
+/// 检查单词是否被收藏（全局）
 ///
 /// Copied from [isWordFavorited].
 @ProviderFor(isWordFavorited)
 const isWordFavoritedProvider = IsWordFavoritedFamily();
 
-/// 检查单词是否被收藏
+/// 检查单词是否被收藏（全局）
 ///
 /// Copied from [isWordFavorited].
 class IsWordFavoritedFamily extends Family<AsyncValue<bool>> {
-  /// 检查单词是否被收藏
+  /// 检查单词是否被收藏（全局）
   ///
   /// Copied from [isWordFavorited].
   const IsWordFavoritedFamily();
 
-  /// 检查单词是否被收藏
+  /// 检查单词是否被收藏（全局）
   ///
   /// Copied from [isWordFavorited].
   IsWordFavoritedProvider call(
@@ -79,11 +79,11 @@ class IsWordFavoritedFamily extends Family<AsyncValue<bool>> {
   String? get name => r'isWordFavoritedProvider';
 }
 
-/// 检查单词是否被收藏
+/// 检查单词是否被收藏（全局）
 ///
 /// Copied from [isWordFavorited].
 class IsWordFavoritedProvider extends AutoDisposeFutureProvider<bool> {
-  /// 检查单词是否被收藏
+  /// 检查单词是否被收藏（全局）
   ///
   /// Copied from [isWordFavorited].
   IsWordFavoritedProvider(
@@ -167,24 +167,24 @@ class _IsWordFavoritedProviderElement
   int get wordId => (origin as IsWordFavoritedProvider).wordId;
 }
 
-String _$favoriteWordsHash() => r'0e48c7fb8f5333f2b178f1c3f8befc5efbdeb1d0';
+String _$favoriteWordsHash() => r'f09f3dcd6dbac6dabd8bb02c64dfefea58fc0a82';
 
-/// 获取用户收藏的单词列表
+/// 获取收藏的单词列表（全局）
 ///
 /// Copied from [favoriteWords].
 @ProviderFor(favoriteWords)
 const favoriteWordsProvider = FavoriteWordsFamily();
 
-/// 获取用户收藏的单词列表
+/// 获取收藏的单词列表（全局）
 ///
 /// Copied from [favoriteWords].
 class FavoriteWordsFamily extends Family<AsyncValue<List<WordModel>>> {
-  /// 获取用户收藏的单词列表
+  /// 获取收藏的单词列表（全局）
   ///
   /// Copied from [favoriteWords].
   const FavoriteWordsFamily();
 
-  /// 获取用户收藏的单词列表
+  /// 获取收藏的单词列表（全局）
   ///
   /// Copied from [favoriteWords].
   FavoriteWordsProvider call({
@@ -219,11 +219,11 @@ class FavoriteWordsFamily extends Family<AsyncValue<List<WordModel>>> {
   String? get name => r'favoriteWordsProvider';
 }
 
-/// 获取用户收藏的单词列表
+/// 获取收藏的单词列表（全局）
 ///
 /// Copied from [favoriteWords].
 class FavoriteWordsProvider extends AutoDisposeFutureProvider<List<WordModel>> {
-  /// 获取用户收藏的单词列表
+  /// 获取收藏的单词列表（全局）
   ///
   /// Copied from [favoriteWords].
   FavoriteWordsProvider({
@@ -309,9 +309,9 @@ class _FavoriteWordsProviderElement
 }
 
 String _$favoriteWordsCountHash() =>
-    r'186ead408bdbab4e7a383dd2767063bdfeabde91';
+    r'1299fec6ce35e10e7d1c9a1f1daadc56056587ff';
 
-/// 获取收藏数量
+/// 获取收藏数量（全局）
 ///
 /// Copied from [favoriteWordsCount].
 @ProviderFor(favoriteWordsCount)
@@ -326,7 +326,7 @@ final favoriteWordsCountProvider = AutoDisposeFutureProvider<int>.internal(
 );
 
 typedef FavoriteWordsCountRef = AutoDisposeFutureProviderRef<int>;
-String _$favoriteToggleHash() => r'6c6f52d96f62cb6a80dd3e776b1e8964b78bb1f2';
+String _$favoriteToggleHash() => r'5753d48eb099dc254442fac71d9a9f31a6a62088';
 
 abstract class _$FavoriteToggle
     extends BuildlessAutoDisposeAsyncNotifier<bool> {
@@ -481,25 +481,5 @@ class _FavoriteToggleProviderElement
   @override
   int get wordId => (origin as FavoriteToggleProvider).wordId;
 }
-
-String _$batchFavoriteOperationsHash() =>
-    r'2b377d970309248f85d3f58241b0f176a4bb047b';
-
-/// 批量操作收藏
-///
-/// Copied from [BatchFavoriteOperations].
-@ProviderFor(BatchFavoriteOperations)
-final batchFavoriteOperationsProvider =
-    AutoDisposeAsyncNotifierProvider<BatchFavoriteOperations, void>.internal(
-  BatchFavoriteOperations.new,
-  name: r'batchFavoriteOperationsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$batchFavoriteOperationsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$BatchFavoriteOperations = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
